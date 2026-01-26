@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/button_fill">
+        <clip
+            android:clipOrientation="vertical"
+            android:drawable="@drawable/green_fill"
+            android:gravity="bottom" />
+    </item>
+    <item android:drawable="@drawable/rounded_button_border" />
+</layer-list>

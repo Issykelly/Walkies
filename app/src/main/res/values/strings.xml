@@ -1,3 +1,38 @@
 <resources>
+    <!-- basic descriptions -->
     <string name="app_name">Walkies</string>
+    <string name="background_description">a basic background, with a floor and a door.</string>
+    <string name="dog_description">the dog sprite, in the middle of the screen.</string>
+
+    <!-- minigame objects descriptions -->
+    <string name="food_minigame_desc">floating food, to drag into the dogs mouth when feeding.</string>
+    <string name="sponge_minigame_desc">floating sponge, to be dragged across the dog when bathing</string>
+
+    <!-- other buttons on screen -->
+    <string name="burger_desc">go to the burger menu, with different settings and stats </string>
+    <string name="back_desc">go back, which navigates the user out of their current action (e.g feeding, bathing).</string>
+
+    <!-- different menu options to fix different needs -->
+    <string name="dress_desc">go to dressing, to navigate to the clothes shop</string>
+    <string name="food_desc">feed the dog to refill the hunger needs.</string>
+    <string name="map_desc">walk the dog to refill its walk need! opens the map to navigate users on a walk.</string>
+    <string name="bath_desc">go to bathing, to clean your dog,</string>
+
+    <!-- labels for different food options -->
+    <string name="meat">meat 50c</string>
+    <string name="sock">sock 10c</string>
+    <string name="cheese">cheese 35c</string>
+    <string name="broccoli">broccoli 20c</string>
+
+    <!-- different food option buttons -->
+    <string name="broc_desc">broccoli, which costs 20 coins and restored 25 hunger points.</string>
+    <string name="cheese_desc">cheese, which costs 35 coins and restores 50 hunger points.</string>
+    <string name="meat_desc">meat, which costs 50 coins and restores all 100 hunger points</string>
+    <string name="socks_desc">socks, which costs 10 coins and restores 10 hunger points.</string>
+
+    <!-- suds desc -->
+    <string name="suds_desc">suds, which appear on screen when the dog is being washed</string>
+    <string name="accessory_desc">accessory your dog can wear</string>
+    <string name="walk_name">placeholder</string>
+    <string name="walk_distance">placeholder</string>
 </resources>

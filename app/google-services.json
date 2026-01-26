@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "106025842615",
+    "project_id": "walkies-c2252",
+    "storage_bucket": "walkies-c2252.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106025842615:android:e04073c2a815b58594da32",
+        "android_client_info": {
+          "package_name": "com.example.walkies"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTh5SgJ1sr50dunpbLbE9oR3BnFmiDsZ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
