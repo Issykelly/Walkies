@@ -41,8 +41,11 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.green.coffee)
     implementation(platform(libs.com.google.firebase.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
+    implementation(libs.google.maps.services)
 }

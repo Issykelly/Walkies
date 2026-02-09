@@ -134,7 +134,9 @@ public class Tomagatchi extends AppCompatActivity {
 
         walkButton.setOnClickListener(v -> {
             Log.d(TAG, "Walk button clicked. Launching CircularWalksMap...");
-            startActivity(new Intent(Tomagatchi.this, CircularWalksMap.class));
+            Intent intent = new Intent(Tomagatchi.this, CircularWalksMap.class);
+            intent.putExtra("is_fresh_launch", true);
+            startActivity(intent);
         });
         
         // Food item clicks
@@ -503,11 +505,11 @@ public class Tomagatchi extends AppCompatActivity {
                             suds.setImageResource(R.drawable.suds2);
                         } else if (progress >= 75 && progress < 150){
                             suds.setImageResource(R.drawable.suds3);
-                        } else if (progress >= 150 && progress < 300){
+                        } else if (progress >= 150 && progress < 225){
                             suds.setImageResource(R.drawable.suds4);
                         }
 
-                        if (progress >= 300){
+                        if (progress >= 225){
                             clean = 100;
                             updateButtonUI();
                             checkHappiness();
