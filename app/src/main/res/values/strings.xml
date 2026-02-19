@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Walkies</string>
     <string name="google_maps_key">AIzaSyDUbpPscuM7nxEfltJvEPh7AhtSOJMCi7w</string>
-    
+
     <string name="background_description">a basic background, with a floor and a door.</string>
     <string name="dog_description">the dog sprite, in the middle of the screen.</string>
     <string name="food_minigame_desc">floating food, to drag into the dogs mouth when feeding.</string>
@@ -24,4 +24,8 @@
     <string name="accessory_desc">accessory your dog can wear</string>
     <string name="walk_name">placeholder</string>
     <string name="walk_distance">placeholder</string>
+    <string name="dialog_choose_walk_type">Would you like a circular walk, or a mystery walk?</string>
+    <string name="circular">Circular</string>
+    <string name="mystery">Mystery</string>
+    <string name="hint_1">hint 1/3</string>
 </resources>

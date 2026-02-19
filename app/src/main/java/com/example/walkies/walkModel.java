@@ -6,13 +6,15 @@ public class walkModel {
     private double longitude;
     private double latitude;
     private boolean isSelected;
+    private String[] hints;
 
-    public walkModel(String name, double distance, double longitude, double latitude) {
+    public walkModel(String name, double distance, double longitude, double latitude, String[] hints) {
         this.name = name;
         this.distance = distance;
         this.longitude = longitude;
         this.latitude = latitude;
         this.isSelected = false;
+        this.hints = hints;
     }
 
     public String getWalkName() {
@@ -30,6 +32,8 @@ public class walkModel {
     public double getWalkLatitude() {
         return latitude;
     }
+
+    public String[] getHints() { return hints;} // may return null}
 
     public boolean isSelected() {
         return isSelected;

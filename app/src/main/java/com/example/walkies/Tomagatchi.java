@@ -7,7 +7,10 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
@@ -30,6 +33,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.DialogFragment;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -45,7 +49,7 @@ public class Tomagatchi extends AppCompatActivity {
     private static final String PREFS_NAME = "WalkiesPrefs";
     private static final String KEY_LAST_SAVE_TIME = "last_save_time";
     private static final String KEY_FIRST_LAUNCH = "first_launch";
-    
+
     private static final String KEY_HUNGER = "hunger";
     private static final String KEY_CLEAN = "clean";
     private static final String KEY_WALKED = "walked";
@@ -64,7 +68,7 @@ public class Tomagatchi extends AppCompatActivity {
     private ImageView draggingSponge;
     private ImageView suds;
     private ImageView accessories;
-    
+
     private SharedPreferences prefs;
     private ImageView dog;
 
@@ -133,17 +137,15 @@ public class Tomagatchi extends AppCompatActivity {
         });
 
         walkButton.setOnClickListener(v -> {
-            Log.d(TAG, "Walk button clicked. Launching CircularWalksMap...");
-            Intent intent = new Intent(Tomagatchi.this, CircularWalksMap.class);
-            intent.putExtra("is_fresh_launch", true);
-            startActivity(intent);
+            StartWalkDialogFragment dialog = new StartWalkDialogFragment();
+            dialog.show(getSupportFragmentManager(), "WalkDialogFragment");
         });
-        
+
         // Food item clicks
         View.OnClickListener foodClickListener = v -> {
             int drawableRes = 0;
             int hungerValue = 0;
-            
+
             if (v.getId() == R.id.sock) {
                 drawableRes = R.drawable.sock;
                 hungerValue = 10;
@@ -157,7 +159,7 @@ public class Tomagatchi extends AppCompatActivity {
                 drawableRes = R.drawable.food_icon;
                 hungerValue = 100;
             }
-            
+
             foodMenu.setVisibility(View.GONE);
             spawnFoodForDragging(drawableRes, hungerValue);
         };
@@ -225,7 +227,7 @@ public class Tomagatchi extends AppCompatActivity {
     private void hideAllSubMenus() {
         imageButton3.setVisibility(VISIBLE);
         imageButton3.animate().translationX(0).setDuration(300).start();
-        
+
         if (foodMenu.getVisibility() == VISIBLE) {
             foodMenu.animate().translationY(500).setDuration(300).withEndAction(() -> {
                 foodMenu.setVisibility(View.GONE);
@@ -247,7 +249,7 @@ public class Tomagatchi extends AppCompatActivity {
         } else {
             mainMenu.setVisibility(VISIBLE);
         }
-        
+
         draggingFood.setVisibility(View.GONE);
         draggingSponge.setVisibility(View.GONE);
         suds.setVisibility(View.GONE);
@@ -295,8 +297,8 @@ public class Tomagatchi extends AppCompatActivity {
         long lastSaveTime = prefs.getLong(KEY_LAST_SAVE_TIME, currentTime);
         long secondsPassed = currentTime - lastSaveTime;
 
-        hunger -= (int) (secondsPassed / 180); 
-        clean -= (int) (secondsPassed / 240);  
+        hunger -= (int) (secondsPassed / 180);
+        clean -= (int) (secondsPassed / 240);
         walked -= (int) (secondsPassed / 240);
 
         hunger = Math.max(0, hunger);
@@ -543,6 +545,28 @@ public class Tomagatchi extends AppCompatActivity {
         Rect headRect = new Rect(dogLeft, headTop, dogRight, dogBottom);
 
         return Rect.intersects(spongeRect, headRect);
+    }
+
+    public static class StartWalkDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());        builder.setMessage(R.string.dialog_choose_walk_type)
+                    .setPositiveButton(R.string.circular, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), CircularWalksMap.class);
+                            intent.putExtra("is_fresh_launch", true);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton(R.string.mystery, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), MysteryWalks.class);
+                            intent.putExtra("is_fresh_launch", true);
+                            startActivity(intent);
+                        }
+                    });
+            return builder.create();
+        }
     }
 
     public int getHunger() { return hunger; }
