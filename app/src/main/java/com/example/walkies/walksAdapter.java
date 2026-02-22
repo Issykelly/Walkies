@@ -1,122 +1,153 @@
 package com.example.walkies;
 
 import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import android.view.*;
+import android.widget.*;
 
-import java.util.ArrayList;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.*;
+
+import java.util.*;
 
 public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> {
 
     private final Context context;
-    final ArrayList<walkModel> walksModelArrayList;
-    private int selectedPosition = RecyclerView.NO_POSITION;
     private final OnWalkClickListener listener;
+
+    private List<walkModel> walks = new ArrayList<>();
+    private int selectedPosition = RecyclerView.NO_POSITION;
 
     public interface OnWalkClickListener {
         void onWalkClick(walkModel walk);
         void onRouteButtonClick(walkModel walk);
     }
 
-    // Constructor
-    public walksAdapter(Context context, ArrayList<walkModel> walksModelArrayList, OnWalkClickListener listener) {
+    public walksAdapter(Context context, List<walkModel> list, OnWalkClickListener listener) {
         this.context = context;
-        this.walksModelArrayList = walksModelArrayList;
+        this.walks = new ArrayList<>(list);
         this.listener = listener;
+        setHasStableIds(true);
     }
+
+    // ---------------- UPDATE DATA (DIFFUTIL) ----------------
+
+    public void updateData(List<walkModel> newList) {
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(walks, newList));
+        walks = new ArrayList<>(newList);
+        diff.dispatchUpdatesTo(this);
+    }
+
+    // ---------------- SELECTION ----------------
+
+    public void setSelectedWalk(walkModel walk) {
+        int newPos = walks.indexOf(walk);
+        if (newPos == -1) return;
+
+        int oldPos = selectedPosition;
+        selectedPosition = newPos;
+
+        if (oldPos != RecyclerView.NO_POSITION)
+            notifyItemChanged(oldPos);
+
+        notifyItemChanged(newPos);
+    }
+
+    // ---------------- ADAPTER METHODS ----------------
 
     @NonNull
     @Override
-    public walksAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // to inflate the layout for each item of recycler view.
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_layout, parent, false);
-        return new ViewHolder(view);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.card_layout, parent, false);
+        return new ViewHolder(v);
     }
-
-    public void setSelectedWalk(walkModel walk) {
-        int newPosition = walksModelArrayList.indexOf(walk);
-
-        if (newPosition == -1) return;
-
-        int oldPosition = selectedPosition;
-        selectedPosition = newPosition;
-
-        if (oldPosition != RecyclerView.NO_POSITION) {
-            notifyItemChanged(oldPosition);
-        }
-        notifyItemChanged(newPosition);
-    }
-
-
 
     @Override
-    public void onBindViewHolder(@NonNull walksAdapter.ViewHolder holder, int position) {
-        // to set data to textview of each card layout
-        walkModel model = walksModelArrayList.get(position);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+
+        walkModel model = walks.get(position);
+
         holder.name.setText(model.getWalkName());
         holder.distance.setText(String.format("%.2f miles", model.getWalkDistance()));
 
-        // Set visibility of the tick based on the selection state
-        if (selectedPosition == position) {
-            holder.tick.setVisibility(View.VISIBLE);
-        } else {
-            holder.tick.setVisibility(View.GONE);
-        }
+        holder.tick.setVisibility(selectedPosition == position
+                ? View.VISIBLE : View.GONE);
 
-        // Handle card click
+        // ---------- CARD CLICK ----------
         holder.itemView.setOnClickListener(v -> {
-            int previousPosition = selectedPosition;
-            
-            if (selectedPosition == position) {
-                // If the same item is clicked, deselect it
+
+            int old = selectedPosition;
+
+            if (selectedPosition == position)
                 selectedPosition = RecyclerView.NO_POSITION;
-            } else {
-                // Select the new item
+            else {
                 selectedPosition = position;
-                if (listener != null) {
+                if (listener != null)
                     listener.onWalkClick(model);
-                }
             }
 
-            // Refresh the previous and new selection
-            if (previousPosition != RecyclerView.NO_POSITION) {
-                notifyItemChanged(previousPosition);
-            }
-            if (selectedPosition != RecyclerView.NO_POSITION) {
+            if (old != RecyclerView.NO_POSITION)
+                notifyItemChanged(old);
+
+            if (selectedPosition != RecyclerView.NO_POSITION)
                 notifyItemChanged(selectedPosition);
-            }
         });
 
-        // Handle button click for starting route
+        // ---------- ROUTE BUTTON ----------
         holder.tick.setOnClickListener(v -> {
-            if (listener != null) {
+            if (listener != null)
                 listener.onRouteButtonClick(model);
-            }
         });
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return walks.get(position).hashCode();
     }
 
     @Override
     public int getItemCount() {
-        // this method is used for showing number of card items in recycler view
-        return walksModelArrayList.size();
+        return walks.size();
     }
 
-    // View holder class for initializing of your views
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView name;
-        final TextView distance;
-        final ImageButton tick;
+    // ---------------- VIEW HOLDER ----------------
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            name = itemView.findViewById(R.id.idWalkName);
-            distance = itemView.findViewById(R.id.idDistance);
-            tick = itemView.findViewById(R.id.imageButton);
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView name, distance;
+        ImageButton tick;
+
+        ViewHolder(View v) {
+            super(v);
+            name = v.findViewById(R.id.idWalkName);
+            distance = v.findViewById(R.id.idDistance);
+            tick = v.findViewById(R.id.imageButton);
+        }
+    }
+
+    // ---------------- DIFFUTIL ----------------
+
+    static class DiffCallback extends DiffUtil.Callback {
+
+        private final List<walkModel> oldList;
+        private final List<walkModel> newList;
+
+        DiffCallback(List<walkModel> oldList, List<walkModel> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        public int getOldListSize() { return oldList.size(); }
+        public int getNewListSize() { return newList.size(); }
+
+        public boolean areItemsTheSame(int oldPos, int newPos) {
+            return oldList.get(oldPos).getWalkName()
+                    .equals(newList.get(newPos).getWalkName());
+        }
+
+        public boolean areContentsTheSame(int oldPos, int newPos) {
+            walkModel o = oldList.get(oldPos);
+            walkModel n = newList.get(newPos);
+            return o.getWalkDistance() == n.getWalkDistance();
         }
     }
 }
