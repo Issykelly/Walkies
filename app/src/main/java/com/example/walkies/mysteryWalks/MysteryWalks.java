@@ -1,4 +1,4 @@
-package com.example.walkies.MysteryWalks;
+package com.example.walkies.mysteryWalks;
 
 import android.Manifest;
 import android.content.Intent;
@@ -16,9 +16,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.walkies.CircularWalks.CircularWalksMap;
+import com.example.walkies.circularWalks.CircularWalksMap;
 import com.example.walkies.R;
-import com.example.walkies.Tamagotchi.Tamagotchi;
+import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
 import com.example.walkies.walksAdapter;
 

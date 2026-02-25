@@ -68,24 +68,30 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         walkModel model = walks.get(position);
 
         holder.name.setText(model.getWalkName());
-        holder.distance.setText(String.format("%.2f miles", model.getWalkDistance()));
+        holder.distance.setText(String.format(Locale.getDefault(), "%.2f miles", model.getWalkDistance()));
 
         holder.tick.setVisibility(selectedPosition == position
                 ? View.VISIBLE : View.GONE);
 
         // ---------- CARD CLICK ----------
         holder.itemView.setOnClickListener(v -> {
+            // Use getBindingAdapterPosition() to get the current position in the list
+            int currentPos = holder.getBindingAdapterPosition();
+            if (currentPos == RecyclerView.NO_POSITION) return;
 
             int old = selectedPosition;
 
-            if (selectedPosition == position)
+            if (selectedPosition == currentPos) {
                 selectedPosition = RecyclerView.NO_POSITION;
-            else {
-                selectedPosition = position;
-                if (listener != null)
-                    listener.onWalkClick(model);
+            } else {
+                selectedPosition = currentPos;
+                if (listener != null) {
+                    // Pull the model from the list using the fresh position
+                    listener.onWalkClick(walks.get(currentPos));
+                }
             }
 
+            // Refresh old and new positions
             if (old != RecyclerView.NO_POSITION)
                 notifyItemChanged(old);
 
@@ -95,8 +101,10 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
 
         // ---------- ROUTE BUTTON ----------
         holder.tick.setOnClickListener(v -> {
-            if (listener != null)
-                listener.onRouteButtonClick(model);
+            int currentPos = holder.getBindingAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION && listener != null) {
+                listener.onRouteButtonClick(walks.get(currentPos));
+            }
         });
     }
 
@@ -120,7 +128,7 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
             super(v);
             name = v.findViewById(R.id.idWalkName);
             distance = v.findViewById(R.id.idDistance);
-            tick = v.findViewById(R.id.imageButton);
+            tick = v.findViewById(R.id.tick);
         }
     }
 

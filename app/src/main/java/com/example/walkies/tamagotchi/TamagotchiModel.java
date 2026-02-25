@@ -1,4 +1,4 @@
-package com.example.walkies.Tamagotchi;
+package com.example.walkies.tamagotchi;
 
 public class TamagotchiModel implements TamagotchiContract.Model {
 
@@ -33,9 +33,9 @@ public class TamagotchiModel implements TamagotchiContract.Model {
 
     @Override
     public void decay(long seconds){
-        hunger -= seconds / 180;
-        clean  -= seconds / 240;
-        walked -= seconds / 240;
+        hunger -= (int) (seconds / 180);
+        clean  -= (int) (seconds / 240);
+        walked -= (int) (seconds / 240);
 
         hunger = Math.max(0, hunger);
         clean  = Math.max(0, clean);

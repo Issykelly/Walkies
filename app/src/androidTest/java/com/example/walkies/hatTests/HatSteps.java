@@ -17,8 +17,8 @@ import static org.hamcrest.Matchers.not;
 import androidx.test.espresso.matcher.ViewMatchers;
 
 public class HatSteps extends GreenCoffeeSteps {
-    @Given("^I am on the Tomagatchi screen$")
-    public void iAmOnTheTomagatchiScreen() {
+    @Given("^I am on the Tamagotchi screen$")
+    public void iAmOnTheTamagotchiScreen() {
         onView(ViewMatchers.withId(R.id.main)).check(matches(isDisplayed()));
     }
 

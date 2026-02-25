@@ -1,4 +1,4 @@
-package com.example.walkies.CircularWalks;
+package com.example.walkies.circularWalks;
 
 import android.content.Context;
 import android.location.Location;

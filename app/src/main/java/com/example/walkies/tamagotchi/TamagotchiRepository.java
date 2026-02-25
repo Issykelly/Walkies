@@ -1,4 +1,4 @@
-package com.example.walkies.Tamagotchi;
+package com.example.walkies.tamagotchi;
 
 import android.content.SharedPreferences;
 

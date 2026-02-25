@@ -1,4 +1,4 @@
-package com.example.walkies.Tamagotchi;
+package com.example.walkies.tamagotchi;
 
 public interface TamagotchiContract {
 
@@ -31,7 +31,6 @@ public interface TamagotchiContract {
         void loadStats();
         void saveStats();
         void applyTimeDecay(long seconds);
-
         void onWalkClicked();
     }
 

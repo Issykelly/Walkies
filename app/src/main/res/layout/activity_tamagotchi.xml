@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Tomagatchi">
+    tools:context="tamagotchi.Tamagotchi">
 
     <ImageView
         android:id="@+id/background"
@@ -42,6 +42,7 @@
         android:layout_marginStart="92dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/rounded_button_border"
+        android:contentDescription="@string/confirm"
         android:padding="12dp"
         android:scaleType="fitCenter"
         android:visibility="gone"
@@ -273,13 +274,14 @@
                     android:layout_width="78dp"
                     android:layout_height="81dp"
                     android:background="@drawable/rounded_button_border"
+                    android:contentDescription="@string/no_hat"
                     android:scaleType="centerInside"
                     app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="None"
+                    android:text="@string/none"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -297,13 +299,14 @@
                     android:layout_width="78dp"
                     android:layout_height="81dp"
                     android:background="@drawable/rounded_button_border"
+                    android:contentDescription="@string/a_brown_cowboy_hat"
                     android:scaleType="centerInside"
                     app:srcCompat="@drawable/browncowboyhat" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Brown"
+                    android:text="@string/brown"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -321,13 +324,14 @@
                     android:layout_width="78dp"
                     android:layout_height="81dp"
                     android:background="@drawable/rounded_button_border"
+                    android:contentDescription="@string/a_pink_cowboy_hat"
                     android:scaleType="centerInside"
                     app:srcCompat="@drawable/pinkcowboyhat" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pink"
+                    android:text="@string/pink"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -345,13 +349,14 @@
                     android:layout_width="78dp"
                     android:layout_height="81dp"
                     android:background="@drawable/rounded_button_border"
+                    android:contentDescription="@string/a_green_party_hat"
                     android:scaleType="centerInside"
                     app:srcCompat="@drawable/partyhatgreen" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Green"
+                    android:text="@string/green"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -369,13 +374,14 @@
                     android:layout_width="78dp"
                     android:layout_height="81dp"
                     android:background="@drawable/rounded_button_border"
+                    android:contentDescription="@string/a_pink_party_hat"
                     android:scaleType="centerInside"
                     app:srcCompat="@drawable/partyhatpink" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pink"
+                    android:text="@String/pink"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />

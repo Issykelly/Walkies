@@ -1,11 +1,10 @@
-package com.example.walkies.CircularWalks;
+package com.example.walkies.circularWalks;
 
 import android.content.Context;
 import android.location.Location;
 
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 
 import java.util.List;
 
@@ -21,9 +20,9 @@ public interface CircularWalksContract {
         void showMarkers(List<walkModel> walks);
         void showForcedWalkMarker(LatLng pendingForcedWalkDest);
 
-        boolean isMapReady();
-
         void getLocation();
+
+        void showHint();
     }
 
     interface Presenter {

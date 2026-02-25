@@ -21,8 +21,8 @@ import androidx.test.espresso.action.Swipe;
 import androidx.test.espresso.matcher.ViewMatchers;
 
 public class BathingSteps extends GreenCoffeeSteps {
-    @Given("^I am on the Tomagatchi screen$")
-    public void iAmOnTheTomagatchiScreen() {
+    @Given("^I am on the Tamagotchi screen$")
+    public void iAmOnTheTamagotchiScreen() {
         onView(ViewMatchers.withId(R.id.main)).check(matches(isDisplayed()));
     }
 
@@ -41,19 +41,10 @@ public class BathingSteps extends GreenCoffeeSteps {
     public void iWashTheDog() {
         for (int i = 0; i < 10; i++) {
             try {
-                // Ensure the sponge is still present before each sequence
                 onView(withId(R.id.draggingSponge)).check(matches(isDisplayed()));
-
-                // Point 1: Top-Left
                 performWashSwipe(0.20f, 0.50f);
-                
-                // Point 2: Top-Right
                 performWashSwipe(0.60f, 0.55f);
-                
-                // Point 3: Mid-Left
                 performWashSwipe(0.20f, 0.60f);
-                
-                // Point 4: Mid-Right
                 performWashSwipe(0.60f, 0.65f);
 
             } catch (Exception | AssertionError e) {

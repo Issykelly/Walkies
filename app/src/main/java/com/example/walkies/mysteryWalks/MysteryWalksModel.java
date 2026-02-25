@@ -1,4 +1,4 @@
-package com.example.walkies.MysteryWalks;
+package com.example.walkies.mysteryWalks;
 
 import com.example.walkies.walkModel;
 

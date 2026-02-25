@@ -1,4 +1,4 @@
-package com.example.walkies.Tamagotchi;
+package com.example.walkies.tamagotchi;
 
 import static android.view.View.VISIBLE;
 
@@ -19,11 +19,12 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
-import com.example.walkies.CircularWalks.CircularWalksMap;
-import com.example.walkies.MysteryWalks.MysteryWalks;
+import com.example.walkies.circularWalks.CircularWalksMap;
+import com.example.walkies.mysteryWalks.MysteryWalks;
 import com.example.walkies.R;
 
 public class Tamagotchi extends AppCompatActivity
@@ -33,7 +34,7 @@ public class Tamagotchi extends AppCompatActivity
     // ------------------------------------------------------------------------
     private TamagotchiPresenter presenter;
     private Runnable updateRunnable;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     // views from activity
     // ------------------------------------------------------------------------
@@ -51,7 +52,6 @@ public class Tamagotchi extends AppCompatActivity
     // ------------------------------------------------------------------------
     private ImageButton burgerMenu;
     private ImageButton backButton;
-    private ImageButton hatButton;
     private ImageButton tickButton;
 
     // menu containers
@@ -84,7 +84,7 @@ public class Tamagotchi extends AppCompatActivity
         feedButton = findViewById(R.id.feed);
         batheButton = findViewById(R.id.bathe);
         walkButton = findViewById(R.id.walk);
-        hatButton = findViewById(R.id.dress);
+        ImageButton hatButton = findViewById(R.id.dress);
         dog = findViewById(R.id.Dog);
         burgerMenu = findViewById(R.id.burgerMenu);
         foodMenu = findViewById(R.id.foodMenu);
@@ -97,7 +97,7 @@ public class Tamagotchi extends AppCompatActivity
         accessories = findViewById(R.id.accessories);
         tickButton = findViewById(R.id.confirmButton);
 
-        // initalise mvp
+        // initialise mvp
         // ------------------------------------------------------------------------
 
         TamagotchiModel model = new TamagotchiModel(100, 100, 100);
@@ -226,7 +226,7 @@ public class Tamagotchi extends AppCompatActivity
     public void playAnimation(int[] frames, int delay) {
         for (int i = 0; i < frames.length; i++) {
             int frame = frames[i];
-            handler.postDelayed(() -> dog.setImageResource(frame), delay * i);
+            handler.postDelayed(() -> dog.setImageResource(frame), (long) delay * i);
         }
     }
 
@@ -289,6 +289,10 @@ public class Tamagotchi extends AppCompatActivity
         draggingSponge.setVisibility(View.INVISIBLE);
         suds.setVisibility(View.GONE);
 
+        backButton.setVisibility(VISIBLE);
+        backButton.setAlpha(0f);
+        backButton.animate().alpha(1f).setDuration(300).start();
+
         draggingSponge.post(() -> {
             View mainContainer = findViewById(R.id.main);
             draggingSponge.setX((mainContainer.getWidth() - draggingSponge.getWidth()) / 2f);
@@ -301,6 +305,7 @@ public class Tamagotchi extends AppCompatActivity
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN: {
+                        v.performClick();
                         dX = v.getX() - event.getRawX();
                         dY = v.getY() - event.getRawY();
                         break;
@@ -350,6 +355,7 @@ public class Tamagotchi extends AppCompatActivity
 
     // food minigame
     // ------------------------------------------------------------------------
+    @SuppressLint("ClickableViewAccessibility")
     private void spawnFoodForDragging(int drawableRes, int hungerValue) {
         draggingFood.setImageResource(drawableRes);
         draggingFood.setAlpha(1.0f);
@@ -366,37 +372,41 @@ public class Tamagotchi extends AppCompatActivity
         });
 
         draggingFood.setOnTouchListener(new View.OnTouchListener() {
+            private float dX, dY;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN: {
+
+                    case MotionEvent.ACTION_DOWN:
+                        v.performClick();
                         dX = v.getX() - event.getRawX();
                         dY = v.getY() - event.getRawY();
-                        break;
-                    }
-                    case MotionEvent.ACTION_MOVE: {
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
                         v.setX(event.getRawX() + dX);
                         v.setY(event.getRawY() + dY);
-                        break;
-                    }
-                    case MotionEvent.ACTION_UP: {
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        v.performClick();
+
                         Rect foodRect = new Rect();
-                        draggingFood.getGlobalVisibleRect(foodRect);
+                        v.getGlobalVisibleRect(foodRect);
 
                         Rect dogRect = new Rect();
                         dog.getGlobalVisibleRect(dogRect);
 
-                        if (presenter.isFoodFed(foodRect, dogRect)) {
+                        if (Rect.intersects(foodRect, dogRect)) {
                             presenter.onFeed(hungerValue);
-                            draggingFood.setVisibility(View.GONE);
+                            v.setVisibility(View.GONE);
                             hideMenus();
                         }
-                        break;
-                    }
-                    default:
-                        return false;
+
+                        return true;
                 }
-                return true;
+                return false;
             }
         });
     }
@@ -448,13 +458,16 @@ public class Tamagotchi extends AppCompatActivity
     public void tailWagAnimation() {
         int baseId = (dog.getTag() != null) ? (int) dog.getTag() : R.drawable.husky_idle;
         String baseName = getResources().getResourceEntryName(baseId);
+        String pkg = getPackageName();
 
-        int wag1 = getResources().getIdentifier(baseName + "2", "drawable", getPackageName());
-        int wag2 = getResources().getIdentifier(baseName + "3", "drawable", getPackageName());
-        int wag3 = getResources().getIdentifier(baseName + "2", "drawable", getPackageName());
-        int wag4 = getResources().getIdentifier(baseName, "drawable", getPackageName());
+        String[] suffixes = {"2", "3", "2", ""};
+        int[] wagFrames = new int[suffixes.length];
 
-        int[] wagFrames = { wag1, wag2, wag3, wag4 };
+        for (int i = 0; i < suffixes.length; i++) {
+            wagFrames[i] = getResources().getIdentifier(baseName + suffixes[i], "drawable", pkg);
+
+            if (wagFrames[i] == 0) wagFrames[i] = baseId;
+        }
 
         playAnimation(wagFrames, 150);
     }
@@ -463,6 +476,7 @@ public class Tamagotchi extends AppCompatActivity
     // ------------------------------------------------------------------------
 
     public static class StartWalkDialogFragment extends DialogFragment {
+        @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());        builder.setMessage(R.string.dialog_choose_walk_type)

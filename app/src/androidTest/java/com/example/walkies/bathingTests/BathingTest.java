@@ -4,6 +4,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.example.walkies.tamagotchi.Tamagotchi;
 import com.mauriciotogneri.greencoffee.GreenCoffeeConfig;
 import com.mauriciotogneri.greencoffee.GreenCoffeeTest;
 import com.mauriciotogneri.greencoffee.ScenarioConfig;
@@ -19,7 +20,7 @@ import java.io.IOException;
 @LargeTest
 public class BathingTest extends GreenCoffeeTest {
     @Rule
-    public ActivityScenarioRule<Tomagatchi> activityRule = new ActivityScenarioRule<>(Tomagatchi.class);
+    public ActivityScenarioRule<Tamagotchi> activityRule = new ActivityScenarioRule<>(Tamagotchi.class);
 
     public BathingTest(ScenarioConfig scenarioConfig) {
         super(scenarioConfig);

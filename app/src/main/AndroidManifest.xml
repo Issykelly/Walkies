@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Walkies">
         <activity
-            android:name=".MysteryWalks.MysteryWalks"
+            android:name=".mysteryWalks.MysteryWalks"
             android:exported="false" />
 
         <meta-data
@@ -25,12 +25,11 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDUbpPscuM7nxEfltJvEPh7AhtSOJMCi7w" />
-q
         <activity
-            android:name=".CircularWalks.CircularWalksMap"
+            android:name=".circularWalks.CircularWalksMap"
             android:exported="false" />
         <activity
-            android:name=".Tamagotchi.Tamagotchi"
+            android:name=".tamagotchi.Tamagotchi"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,7 +1,7 @@
-Feature: Dressing the Tomagatchi
+Feature: Dressing the Tamagotchi
 
   Scenario: Opening the hat menu
-    Given I am on the Tomagatchi screen
+    Given I am on the Tamagotchi screen
     When I tap the hat button
     Then I should see the hat menu
 

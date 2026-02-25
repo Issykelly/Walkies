@@ -1,4 +1,4 @@
-package com.example.walkies.CircularWalks;
+package com.example.walkies.circularWalks;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,11 +6,7 @@ import android.location.Location;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.DefaultLifecycleObserver;
-import androidx.lifecycle.LifecycleOwner;
-
-import com.example.walkies.Tamagotchi.Tamagotchi;
+import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -28,7 +24,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     private Location lastLocation;
     private Location previousLocation;
 
-    private List<LatLng> fullRoutePoints = new ArrayList<>();
+    private final List<LatLng> fullRoutePoints = new ArrayList<>();
 
     private boolean isReturning = false;
     private boolean isForcedWalk = false;
@@ -55,7 +51,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     // loop
     private final Handler routeHandler = new Handler(Looper.getMainLooper());
     private boolean loopRunning = false;
-    private long dynamicInterval = 1500;
 
     public CircularWalksPresenter(CircularWalksContract.View v) {
         view = v;
@@ -70,11 +65,11 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     public void onMapReady() {
         mapReady = true;
 
-        if (pendingForcedWalkDest != null) {
+        if (isForcedWalk) {
 
             renderPendingMarkerIfNeeded();
 
-            pendingCameraTarget = pendingForcedWalkDest;
+            pendingCameraTarget = new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
             pendingCameraZoom = 15f;
 
         } else if (lastLocation != null) {
@@ -92,8 +87,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void renderPendingMarkerIfNeeded() {
-        if (mapReady && pendingForcedWalkDest != null) {
-            view.showForcedWalkMarker(pendingForcedWalkDest);
+        if (mapReady) {
+            view.showForcedWalkMarker(new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude()));
         }
     }
 
@@ -155,6 +150,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             view.showRoute(fullRoutePoints);
             startRouteLoop();
         });
+
+        view.showHint();
     }
 
     // =========================================================
@@ -194,6 +191,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void scheduleNext() {
+        long dynamicInterval = 1500;
         routeHandler.postDelayed(routeLoop, dynamicInterval);
     }
 
@@ -258,7 +256,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         //view.showMessage(String.valueOf(user));
 
         for (int i = 1; i < fullRoutePoints.size(); i++) {
-            view.showMessage(String.valueOf(distanceBetween(user, fullRoutePoints.get(i))));
             if (distanceBetween(user, fullRoutePoints.get(i)) < PROGRESS_THRESHOLD) {
                 trimCount = i; //
             } else {
@@ -391,7 +388,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private void beginForcedWalk(LatLng dest) {
 
-        activeWalk = new walkModel("Forced Walk", 0, dest.latitude, dest.longitude, null);
+        activeWalk = new walkModel("Forced Walk", 0, dest.longitude, dest.latitude, null);
 
         startPoint = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
         isReturning = false;

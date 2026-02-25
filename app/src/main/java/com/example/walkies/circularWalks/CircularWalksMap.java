@@ -1,4 +1,4 @@
-package com.example.walkies.CircularWalks;
+package com.example.walkies.circularWalks;
 
 import android.Manifest;
 import android.content.Context;
@@ -6,9 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -19,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.walkies.R;
-import com.example.walkies.Tamagotchi.Tamagotchi;
+import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
 import com.example.walkies.walksAdapter;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -38,12 +36,8 @@ public class CircularWalksMap extends AppCompatActivity
     private Polyline polyline;
     private RecyclerView rv;
     private walksAdapter adapter;
-    private SupportMapFragment mapFragment;
-    private ImageButton backBtn;
     private boolean mapReady = false;
-    private static final int MAX_RETRIES = 3;
-    private static final long RETRY_DELAY_MS = 1000;
-    private int retryCount = 0;
+    private FrameLayout hintContainer;
     private FusedLocationProviderClient client;
 
     @Override
@@ -52,11 +46,12 @@ public class CircularWalksMap extends AppCompatActivity
         setContentView(R.layout.activity_circular_walks_map);
 
         rv = findViewById(R.id.idRVWalks);
+        hintContainer = findViewById(R.id.hint_container);
         rv.setLayoutManager(new LinearLayoutManager(this));
 
         presenter = new CircularWalksPresenter(this);
 
-        mapFragment = (SupportMapFragment)
+        SupportMapFragment mapFragment = (SupportMapFragment)
                 getSupportFragmentManager().findFragmentById(R.id.map);
 
         if (mapFragment != null)
@@ -77,7 +72,7 @@ public class CircularWalksMap extends AppCompatActivity
             presenter.startForcedWalk(new LatLng(forcedLat, forcedLon));
         }
 
-        backBtn = findViewById(R.id.backButton);
+        ImageButton backBtn = findViewById(R.id.backButton);
         backBtn.setOnClickListener(v -> {
             Intent intent = new Intent(this, Tamagotchi.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -137,6 +132,10 @@ public class CircularWalksMap extends AppCompatActivity
         } else {
             adapter.updateData(walks);
         }
+    }
+
+    public void showHint() {
+        hintContainer.setVisibility(android.view.View.VISIBLE);
     }
 
     @Override
@@ -206,6 +205,9 @@ public class CircularWalksMap extends AppCompatActivity
     }
 
     public void getLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         client.getLastLocation().addOnSuccessListener(location -> {
             if (location != null)
                 updateLocation(location);

@@ -1,6 +1,4 @@
-package com.example.walkies.MysteryWalks;
-
-import android.location.Location;
+package com.example.walkies.mysteryWalks;
 
 import com.example.walkies.walkModel;
 

@@ -18,12 +18,13 @@
         android:padding="16dp">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/tick"
             android:layout_width="67dp"
             android:layout_height="56dp"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:background="#4CAF50"
+            android:contentDescription="@string/confirm"
             android:visibility="gone"
             app:srcCompat="@android:drawable/checkbox_on_background" />
 
@@ -31,7 +32,7 @@
             android:id="@+id/idWalkName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@id/imageButton"
+            android:layout_toStartOf="@id/tick"
             android:layout_marginEnd="8dp"
             android:textColor="@color/black"
             android:textSize="18sp"
@@ -42,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/idWalkName"
-            android:layout_toStartOf="@id/imageButton"
+            android:layout_toStartOf="@id/tick"
             android:layout_marginEnd="8dp"
             android:layout_marginTop="8dp"
             android:textColor="@color/black"
