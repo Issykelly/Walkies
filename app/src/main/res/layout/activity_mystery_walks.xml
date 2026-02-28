@@ -100,7 +100,7 @@
         android:layout_width="378dp"
         android:layout_height="63dp"
         android:layout_marginTop="72dp"
-        android:text="@String/look_around"
+        android:text="@string/look_around"
         android:textAlignment="center"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"

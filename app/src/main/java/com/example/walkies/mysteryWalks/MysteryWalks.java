@@ -28,10 +28,12 @@ public class MysteryWalks extends AppCompatActivity
     private static final int PERMISSION_ID = 44;
 
     private MysteryWalksPresenter presenter;
+    private MysteryWalksModel model;
 
     private RecyclerView rv;
     private Group hintGroup;
     private TextView hintTxt, hintNum, dist;
+    private int maxHintIndex = 0;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -56,7 +58,6 @@ public class MysteryWalks extends AppCompatActivity
 
         back.setOnClickListener(v -> openTamagotchi());
 
-        // Default UI state (important)
         showHints(false);
         showWalkList(true);
 
@@ -83,6 +84,12 @@ public class MysteryWalks extends AppCompatActivity
 
     @Override
     public void showHint(String t, int i) {
+        if (i > maxHintIndex){
+            maxHintIndex = i;
+            if (model != null){
+                getMaxHint();
+            }
+        }
         hintTxt.setText(t);
         hintNum.setText("Hint " + i + "/3");
     }
@@ -161,5 +168,10 @@ public class MysteryWalks extends AppCompatActivity
     @Override protected void onPause() {
         super.onPause();
         presenter.pause();
+    }
+
+    @Override
+    public void getMaxHint(){
+        model.maxHint = maxHintIndex;
     }
 }

@@ -36,7 +36,6 @@ public class CircularWalksMap extends AppCompatActivity
     private Polyline polyline;
     private RecyclerView rv;
     private walksAdapter adapter;
-    private boolean mapReady = false;
     private FrameLayout hintContainer;
     private FusedLocationProviderClient client;
 
@@ -83,7 +82,6 @@ public class CircularWalksMap extends AppCompatActivity
 
     @Override
     public void onMapReady(@NonNull GoogleMap g) {
-        mapReady = true;
         map = g;
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -92,11 +90,6 @@ public class CircularWalksMap extends AppCompatActivity
 
         presenter.onMapReady();
     }
-
-    public boolean isMapReady() {
-        return mapReady;
-    }
-
 
     // ---------------- LOCATION UPDATE FROM SERVICE / CLIENT ----------------
     // Call this from your LocationCallback

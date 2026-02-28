@@ -44,4 +44,10 @@
     <string name="a_green_party_hat">a green party hat</string>
     <string name="green">Green</string>
     <string name="a_pink_party_hat">a pink party hat</string>
+    <string name="cant_afford">you don\'t have enough coins for this.</string>
+    <string name="ok">okay</string>
+    <string name="feed">Feed</string>
+    <string name="bathe">Bathe</string>
+    <string name="walk">Walk</string>
+    <string name="dress">Dress</string>
 </resources>

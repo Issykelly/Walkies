@@ -4,7 +4,7 @@ import com.example.walkies.walkModel;
 
 public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
 
-    private static final float THRESHOLD=50f;
+    private static final float THRESHOLD=3000f;
 
     private final MysteryWalksContract.View view;
     private final MysteryWalksContract.Model model;

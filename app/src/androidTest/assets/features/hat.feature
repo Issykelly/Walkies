@@ -13,6 +13,7 @@ Feature: Dressing the Tamagotchi
     Then The hat shouldn't be equipted
 
   Scenario: a hat is tested and then brought
+    Given No hat is equipted
     Given I am on the hat menu
     When I tap on a hat
     Then I should see the hat on

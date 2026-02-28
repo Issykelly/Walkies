@@ -17,6 +17,8 @@ public interface MysteryWalksContract {
 
         boolean hasLocationPermission();
         void requestLocationPermission();
+
+        void getMaxHint();
     }
 
     interface Presenter {

@@ -22,6 +22,11 @@ public class HatSteps extends GreenCoffeeSteps {
         onView(ViewMatchers.withId(R.id.main)).check(matches(isDisplayed()));
     }
 
+    @Given ("^No hat is equipted$")
+    public void noHatIsEquipted() {
+        onView(withId(R.id.accessories)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
+    }
+
     @When("^I tap the hat button$")
     public void iTapTheHatButton() {
         onView(withId(R.id.dress)).perform(click());

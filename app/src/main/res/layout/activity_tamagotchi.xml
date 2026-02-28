@@ -17,7 +17,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@drawable/plain" />
 
     <ImageButton
@@ -79,45 +79,105 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <ImageButton
-            android:id="@+id/feed"
-            android:layout_width="78dp"
-            android:layout_height="81dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
-            android:adjustViewBounds="false"
-            android:background="@drawable/button_background_dynamic"
-            android:contentDescription="@string/food_desc"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/food_icon" />
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/bathe"
-            android:layout_width="78dp"
-            android:layout_height="81dp"
+            <ImageButton
+                android:id="@+id/feed"
+                android:layout_width="78dp"
+                android:layout_height="81dp"
+                android:adjustViewBounds="false"
+                android:background="@drawable/button_background_dynamic"
+                android:contentDescription="@string/food_desc"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/food_icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/feed"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
-            android:background="@drawable/button_background_dynamic"
-            android:contentDescription="@string/bath_desc"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/bath_icon" />
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/walk"
-            android:layout_width="78dp"
-            android:layout_height="81dp"
+            <ImageButton
+                android:id="@+id/bathe"
+                android:layout_width="78dp"
+                android:layout_height="81dp"
+                android:background="@drawable/button_background_dynamic"
+                android:contentDescription="@string/bath_desc"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/bath_icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bathe"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="10dp"
-            android:background="@drawable/button_background_dynamic"
-            android:contentDescription="@string/map_desc"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/foot_icon" />
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <ImageButton
-            android:id="@+id/dress"
-            android:layout_width="78dp"
-            android:layout_height="81dp"
-            android:background="@drawable/green_fill_with_border"
-            android:contentDescription="@string/dress_desc"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/dress_icon" />
+            <ImageButton
+                android:id="@+id/walk"
+                android:layout_width="78dp"
+                android:layout_height="81dp"
+                android:background="@drawable/button_background_dynamic"
+                android:contentDescription="@string/map_desc"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/foot_icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/walk"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/dress"
+                android:layout_width="78dp"
+                android:layout_height="81dp"
+                android:background="@drawable/green_fill_with_border"
+                android:contentDescription="@string/dress_desc"
+                android:scaleType="centerInside"
+                app:srcCompat="@drawable/dress_icon" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dress"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -310,6 +370,16 @@
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/brownCost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="100c"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -332,6 +402,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/pink"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/pinkCost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="100c"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -360,6 +440,16 @@
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/greenCost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="75c"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -381,7 +471,17 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@String/pink"
+                    android:text="@string/pink"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/pinkPartyCost"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="75c"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -454,5 +554,76 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.228"
         app:srcCompat="@drawable/browncowboyhat" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/statsGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:constraint_referenced_ids="LevelImage,level,coinsImage,coins" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/coinGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:constraint_referenced_ids="coinsImage,coins" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/levelGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:constraint_referenced_ids="LevelImage,level" />
+
+    <ImageView
+        android:id="@+id/LevelImage"
+        android:layout_width="56dp"
+        android:layout_height="66dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/level"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/level"
+        android:layout_width="41dp"
+        android:layout_height="61dp"
+        android:gravity="center"
+        android:text="99"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/Dog"
+        app:layout_constraintStart_toEndOf="@+id/LevelImage"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.271" />
+
+    <ImageView
+        android:id="@+id/coinsImage"
+        android:layout_width="67dp"
+        android:layout_height="68dp"
+        android:layout_marginStart="172dp"
+        android:src="@drawable/coin"
+        app:layout_constraintBottom_toTopOf="@+id/Dog"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.173" />
+
+    <TextView
+        android:id="@+id/coins"
+        android:layout_width="63dp"
+        android:layout_height="61dp"
+        android:layout_marginStart="1dp"
+        android:gravity="center"
+        android:text="9999"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/Dog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/coinsImage"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.254" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

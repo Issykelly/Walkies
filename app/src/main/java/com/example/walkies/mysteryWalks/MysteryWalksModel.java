@@ -8,6 +8,7 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
     private final com.google.firebase.firestore.FirebaseFirestore db;
     private final com.google.android.gms.location.FusedLocationProviderClient client;
     private com.google.android.gms.location.LocationCallback callback;
+    public int maxHint = 0;
 
     public MysteryWalksModel(android.content.Context ctx){
         this.ctx = ctx;
@@ -77,12 +78,19 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
 
     @Override
     public void saveCompletion(){
-        var p=ctx.getSharedPreferences("WalkiesPrefs",
+        int earnedXp = Math.max(0, 100 - (25 * maxHint));
+
+        var p = ctx.getSharedPreferences("WalkiesPrefs",
                 android.content.Context.MODE_PRIVATE);
 
+        int currentXp = p.getInt("xp", 0);
+        int currentCoins = p.getInt("coins", 0);
+
         p.edit()
-                .putInt("walked",100)
-                .putLong("last_save_time",System.currentTimeMillis()/1000)
+                .putInt("walked", 100)
+                .putLong("last_save_time", System.currentTimeMillis() / 1000)
+                .putInt("coins", currentCoins + 100)
+                .putInt("xp", currentXp + earnedXp)
                 .apply();
     }
 }

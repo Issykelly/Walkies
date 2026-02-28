@@ -1,6 +1,7 @@
 package com.example.walkies.tamagotchi;
 
 import android.graphics.Rect;
+import android.util.Log;
 
 import com.example.walkies.R;
 
@@ -32,6 +33,15 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         model.clean(repository.getClean() - model.getClean());
         model.walk(repository.getWalked() - model.getWalked());
 
+        model.coins(repository.getCoins());
+        model.xp(repository.getXP());
+        model.level(repository.getLevel());
+
+        model.setOwnedHats(repository.getOwnedHats());
+        model.setSelectedHat(repository.getSelectedHat());
+
+        updateUI();
+
         long secondsPassed = (System.currentTimeMillis() / 1000) - repository.getLastSavedTime();
         applyTimeDecay(secondsPassed);
     }
@@ -39,7 +49,12 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     @Override
     public void saveStats() {
         repository.saveStats(model.getHunger(), model.getClean(), model.getWalked());
+        repository.saveXPandLevel(model.getXP(), model.getLevel());
+        repository.saveCoins(model.getCoins());
         repository.saveTime(System.currentTimeMillis() / 1000);
+
+        repository.saveOwnedHats(model.getOwnedHats());
+        repository.saveSelectedHat(model.getSelectedHat());
     }
 
     @Override
@@ -70,7 +85,10 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         view.updateClean(model.getClean());
         view.updateWalk(model.getWalked());
 
+        view.updateUI();
+
         int happiness = model.getHunger() + model.getClean() + model.getWalked();
+        Log.d("Happiness", String.valueOf(happiness));
         if (happiness >= 250) {
             view.showDogState(R.drawable.husky_estatic);
             playTailWagAnimation();
