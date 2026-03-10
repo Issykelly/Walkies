@@ -5,6 +5,7 @@ import static android.view.View.VISIBLE;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
@@ -13,6 +14,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.HorizontalScrollView;
@@ -20,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
@@ -38,6 +41,7 @@ public class Tamagotchi extends AppCompatActivity
     private TamagotchiPresenter presenter;
     private TamagotchiModel model;
     private TamagotchiRepository repository;
+    private TamagotchiUI ui;
     private Runnable updateRunnable;
     private Handler handler = new Handler(Looper.getMainLooper());
 
@@ -54,12 +58,14 @@ public class Tamagotchi extends AppCompatActivity
     private ImageButton feedButton;
     private ImageButton batheButton;
     private ImageButton walkButton;
+    private ImageButton helpButton;
 
     // navigation
     // ------------------------------------------------------------------------
     private ImageButton burgerMenu;
     private ImageButton backButton;
     private ImageButton tickButton;
+    private ImageButton levelButton;
 
     // menu containers
     // ------------------------------------------------------------------------
@@ -75,6 +81,11 @@ public class Tamagotchi extends AppCompatActivity
     private ImageView draggingFood;
     private ImageView draggingSponge;
     private float dX, dY;
+
+    // hints
+    // ------------------------------------------------------------------------
+    private TextView foodHint;
+    private TextView bathHint;
 
     // flags
     // ------------------------------------------------------------------------
@@ -121,15 +132,18 @@ public class Tamagotchi extends AppCompatActivity
         level = findViewById(R.id.level);
         coinGroup = findViewById(R.id.coinGroup);
         levelGroup = findViewById(R.id.levelGroup);
-
-
+        levelButton = findViewById(R.id.LevelImage);
+        helpButton = findViewById(R.id.helpButton);
+        foodHint = findViewById(R.id.foodHint);
+        bathHint = findViewById(R.id.bathHint);
 
         // initialise mvp
         // ------------------------------------------------------------------------
 
-        model = new TamagotchiModel(100, 100, 100, 0, 0, 0);
+        model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, "city");
         repository = new TamagotchiRepository(getSharedPreferences("WalkiesPrefs", MODE_PRIVATE));
-        presenter = new TamagotchiPresenter(this, model, repository);
+        ui = new TamagotchiUI(this);
+        presenter = new TamagotchiPresenter(this, model, ui, repository);
 
         // is this the first launch? are we fetching saved stats or creating new ones?
         // ------------------------------------------------------------------------
@@ -138,6 +152,9 @@ public class Tamagotchi extends AppCompatActivity
             model.feed(100);
             model.clean(100);
             model.walk(100);
+            // choose city here ++ other options (eventually)
+            model.setCity("Brighton");
+            repository.saveCity("Brighton");
         }else {
             presenter.loadStats();
         }
@@ -162,6 +179,16 @@ public class Tamagotchi extends AppCompatActivity
         hatButton.setOnClickListener(v -> presenter.onHatClicked());
         backButton.setOnClickListener(v -> hideMenus());
         walkButton.setOnClickListener(v -> presenter.onWalkClicked());
+        levelButton.setOnClickListener(v -> presenter.onLevelClicked());
+        burgerMenu.setOnClickListener(v -> presenter.onSettingsClicked());
+
+        helpButton.setOnClickListener(v -> {
+            if (draggingFood.getVisibility() == VISIBLE) {
+                foodHint.setVisibility(foodHint.getVisibility() == VISIBLE ? View.GONE : VISIBLE);
+            } else if (draggingSponge.getVisibility() == VISIBLE) {
+                bathHint.setVisibility(bathHint.getVisibility() == VISIBLE ? View.GONE : VISIBLE);
+            }
+        });
 
         // food menu
         // ------------------------------------------------------------------------
@@ -289,7 +316,6 @@ public class Tamagotchi extends AppCompatActivity
     }
 
     public void updateUI(){
-        model.checkXPLevels();
         coins.setText(String.valueOf(model.getCoins()));
         level.setText(String.valueOf(model.getLevel()));
     }
@@ -297,14 +323,17 @@ public class Tamagotchi extends AppCompatActivity
     // menu maintainers
     // ------------------------------------------------------------------------
 
-    public void showBackButton(boolean c){
+    public void showBackButton(boolean c, boolean h) {
         backButton.setVisibility(VISIBLE);
         backButton.setAlpha(0f);
         backButton.animate().alpha(1f).setDuration(300).start();
-        if (c){
+        if (c) {
             levelGroup.setVisibility(View.GONE);
         } else {
             XPandCoins.setVisibility(View.GONE);
+        }
+        if (h) {
+            helpButton.setVisibility(View.VISIBLE);
         }
     }
 
@@ -322,7 +351,7 @@ public class Tamagotchi extends AppCompatActivity
         foodMenu.setVisibility(VISIBLE);
         foodMenu.setTranslationY(500);
         foodMenu.animate().translationY(0).setDuration(300).start();
-        showBackButton(true);
+        showBackButton(true, false);
     }
 
     @Override
@@ -333,16 +362,10 @@ public class Tamagotchi extends AppCompatActivity
         hatMenu.setVisibility(VISIBLE);
         hatMenu.setTranslationY(500);
         hatMenu.animate().translationY(0).setDuration(300).start();
-        showBackButton(true);
+        showBackButton(true, false);
         tickButton.setVisibility(VISIBLE);
         tickButton.setAlpha(0f);
         tickButton.animate().alpha(1f).setDuration(300).start();
-    }
-
-    @Override
-    public void showWalkOptions() {
-        StartWalkDialogFragment dialog = new StartWalkDialogFragment();
-        dialog.show(getSupportFragmentManager(), "WalkDialogFragment");
     }
 
     //dragging minigames
@@ -355,9 +378,14 @@ public class Tamagotchi extends AppCompatActivity
         cleanProgress = 0;
         draggingSponge.setAlpha(1.0f);
         draggingSponge.setVisibility(View.INVISIBLE);
+        suds.setImageResource(R.drawable.suds1);
         suds.setVisibility(View.GONE);
 
-        showBackButton(false);
+        showBackButton(false, true);
+
+        if (model.getLifetimeBathed() == 0) {
+            bathHint.setVisibility(VISIBLE);
+        }
 
         draggingSponge.post(() -> {
             View mainContainer = findViewById(R.id.main);
@@ -426,6 +454,12 @@ public class Tamagotchi extends AppCompatActivity
         draggingFood.setImageResource(drawableRes);
         draggingFood.setAlpha(1.0f);
         draggingFood.setVisibility(View.INVISIBLE);
+
+        showBackButton(false, true);
+
+        if (model.getLifetimeFed() == 0) {
+            foodHint.setVisibility(VISIBLE);
+        }
 
         draggingFood.post(new Runnable() {
             @Override
@@ -520,6 +554,9 @@ public class Tamagotchi extends AppCompatActivity
                     backButton.setVisibility(View.GONE);
                     showXPandCoins();
                 });
+        helpButton.setVisibility(View.GONE);
+        foodHint.setVisibility(View.GONE);
+        bathHint.setVisibility(View.GONE);
     }
 
     // did the user buy the hat?
@@ -565,8 +602,15 @@ public class Tamagotchi extends AppCompatActivity
     }
 
     private void cantAfford(){
-        cantAffordDialog dialog = new cantAffordDialog();
-        dialog.show(getSupportFragmentManager(), "cantAffordDialog");
+        ui.showCantAffordDialog();
+    }
+
+    // level up diaglog
+    // ------------------------------------------------------------------------
+
+    @Override
+    public void showLevelUpPopup(int newLevel) {
+        ui.showLevelUpDialog(newLevel);
     }
 
     // animation
@@ -588,42 +632,12 @@ public class Tamagotchi extends AppCompatActivity
         playAnimation(wagFrames, 150);
     }
 
-    // for user input
-    // ------------------------------------------------------------------------
-
-    public static class StartWalkDialogFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());        builder.setMessage(R.string.dialog_choose_walk_type)
-                    .setPositiveButton(R.string.circular, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            Intent intent = new Intent(getActivity(), CircularWalksMap.class);
-                            intent.putExtra("is_fresh_launch", true);
-                            startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton(R.string.mystery, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            Intent intent = new Intent(getActivity(), MysteryWalks.class);
-                            intent.putExtra("is_fresh_launch", true);
-                            startActivity(intent);
-                        }
-                    });
-            return builder.create();
-        }
+    @Override
+    public Context getContext() {
+        return this;
     }
 
-    public static class cantAffordDialog extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage(R.string.cant_afford);
-            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.dismiss();
-                }
-            });
-            return builder.create();
-        }
+    public TamagotchiContract.Presenter getPresenter() {
+        return presenter;
     }
 }

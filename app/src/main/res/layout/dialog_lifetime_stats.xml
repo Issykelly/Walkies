@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/levelup_background"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/statsTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/lifetime_stats_title"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeXP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lifetime_xp"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeCoins"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lifetime_coins"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeCircular"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/circular_walks_stat"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeMystery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/mystery_walks_stat"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeFed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/times_fed"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/lifetimeBathed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/times_bathed"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btnBackStats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#4CAF50"
+        android:text="@string/back"
+        android:textAllCaps="false" />
+
+</LinearLayout>

@@ -91,13 +91,14 @@ public class CircularWalksMap extends AppCompatActivity
         presenter.onMapReady();
     }
 
-    // ---------------- LOCATION UPDATE FROM SERVICE / CLIENT ----------------
-    // Call this from your LocationCallback
+    // location updates
+    // -------------------------------------------------------------------------------
     public void updateLocation(Location location){
         presenter.onLocationReceived(location);
     }
 
-    // ---------------- VIEW METHODS ----------------
+    // view methods
+    // -------------------------------------------------------------------------------
 
     @Override
     public void showWalks(List<walkModel> walks) {
@@ -209,7 +210,8 @@ public class CircularWalksMap extends AppCompatActivity
 
 
 
-    // ---------------- LIFECYCLE ----------------
+    // lifecycle
+    // -------------------------------------------------------------------------------
 
     @Override
     protected void onResume() {

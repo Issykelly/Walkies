@@ -64,7 +64,8 @@ public class MysteryWalks extends AppCompatActivity
         presenter.init(getIntent().getBooleanExtra("is_fresh_launch", false));
     }
 
-    // ---------- VIEW METHODS ----------
+    // view
+    // ------------------------------------------------------------------------------------------------------------------------
 
     @Override
     public void showWalks(java.util.List<walkModel> walks) {

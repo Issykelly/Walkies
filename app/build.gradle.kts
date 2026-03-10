@@ -38,10 +38,19 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.recyclerview)
+
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.5.0")
+
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.green.coffee)
+    androidTestImplementation("org.mockito:mockito-android:5.5.0")
+    androidTestImplementation("io.cucumber:cucumber-android:7.18.1")
+    androidTestImplementation("io.cucumber:cucumber-picocontainer:7.18.1")
+
+    androidTestImplementation("androidx.test:core:1.5.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
     implementation(platform(libs.com.google.firebase.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)

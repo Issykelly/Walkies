@@ -16,7 +16,7 @@ import java.util.List;
 public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private final CircularWalksContract.View view;
-    private final CircularWalksContract.Model model;
+    protected CircularWalksContract.Model model;
 
     // Walk state
     private walkModel activeWalk;
@@ -53,13 +53,16 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     private boolean loopRunning = false;
 
     public CircularWalksPresenter(CircularWalksContract.View v) {
-        view = v;
-        model = new CircularWalksModel(v.getContext());
+        this(v, new CircularWalksModel(v.getContext()));
     }
 
-    // =========================================================
-    // MAP READY
-    // =========================================================
+    public CircularWalksPresenter(CircularWalksContract.View v, CircularWalksContract.Model m) {
+        view = v;
+        model = m;
+    }
+
+    // on map ready
+    // -------------------------------------------------------------------------------
 
     @Override
     public void onMapReady() {
@@ -92,9 +95,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         }
     }
 
-    // =========================================================
-    // LOCATION UPDATES
-    // =========================================================
+    // handles location updates
+    // -------------------------------------------------------------------------------
 
     @Override
     public void onLocationReceived(Location loc) {
@@ -119,9 +121,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         }
     }
 
-    // =========================================================
-    // WALK SELECTION
-    // =========================================================
+    // on walk selection
+    // -------------------------------------------------------------------------------
 
     @Override
     public void onWalkSelected(walkModel walk) {
@@ -154,9 +155,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         view.showHint();
     }
 
-    // =========================================================
-    // MAIN LOOP
-    // =========================================================
+    // main loop
+    // -------------------------------------------------------------------------------
 
     private final Runnable routeLoop = new Runnable() {
         @Override
@@ -195,9 +195,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         routeHandler.postDelayed(routeLoop, dynamicInterval);
     }
 
-    // =========================================================
-    // ROUTE LOGIC
-    // =========================================================
+    // routing logic
+    // -------------------------------------------------------------------------------
 
     private void updateLiveRoute(Location userLocation) {
         if (fullRoutePoints.isEmpty()) return;
@@ -257,7 +256,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         for (int i = 1; i < fullRoutePoints.size(); i++) {
             if (distanceBetween(user, fullRoutePoints.get(i)) < PROGRESS_THRESHOLD) {
-                trimCount = i; //
+                trimCount = i;
             } else {
                 break;
             }
@@ -299,9 +298,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
 
-    // =========================================================
-    // PROXIMITY
-    // =========================================================
+    // proximity logic
+    // -------------------------------------------------------------------------------
 
     private void checkProximity(Location loc) {
 
@@ -316,7 +314,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
                 d
         );
 
-
         if (d[0] < ARRIVAL_THRESHOLD) {
 
             if (isForcedWalk)
@@ -330,9 +327,8 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         }
     }
 
-    // =========================================================
-    // COMPLETION
-    // =========================================================
+    // on completion
+    // -------------------------------------------------------------------------------
 
     public void completeRegularWalk() {
         finishWalk("Walk completed!");
@@ -355,24 +351,36 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         view.showRoute(fullRoutePoints);
 
-        Context ctx = view.getContext();
+        double maxDistanceMeters = 1609.34;
+        double distanceRatio = Math.min(activeWalk.getWalkDistance() / maxDistanceMeters, 1.0);
 
-        ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE)
-                .edit()
+        int earnedXp = (int) Math.round(distanceRatio * 200);
+
+        Context ctx = view.getContext();
+        var p = ctx.getSharedPreferences("WalkiesPrefs",
+                android.content.Context.MODE_PRIVATE);
+        int currentXp = p.getInt("xp", 0);
+        int currentCoins = p.getInt("coins", 0);
+
+        p.edit()
                 .putInt("walked", 100)
                 .putLong("last_save_time", System.currentTimeMillis() / 1000)
+                .putInt("coins", currentCoins + 75)
+                .putInt("lifetime_coins", p.getInt("lifetime_coins", 0) + 75)
+                .putInt("xp", currentXp + earnedXp)
+                .putInt("lifetime_xp", p.getInt("lifetime_xp", 0) + earnedXp)
+                .putInt("lifetime_circular", p.getInt("lifetime_circular", 0) + 1)
                 .apply();
 
         Intent i = new Intent(ctx, Tamagotchi.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         ctx.startActivity(i);
 
         view.toggleWalkList(true);
     }
 
-    // =========================================================
-    // FORCED WALK
-    // =========================================================
+    // forced walk logic (for giving up on mystery walks
+    // -------------------------------------------------------------------------------
 
     public void startForcedWalk(LatLng dest) {
 

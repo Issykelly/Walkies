@@ -52,7 +52,8 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         notifyItemChanged(newPos);
     }
 
-    // ---------------- ADAPTER METHODS ----------------
+    // -adapter
+    // -------------------------------------------------------------------------------
 
     @NonNull
     @Override
@@ -73,9 +74,10 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         holder.tick.setVisibility(selectedPosition == position
                 ? View.VISIBLE : View.GONE);
 
-        // ---------- CARD CLICK ----------
+        // on click logic
+        // -------------------------------------------------------------------------------
         holder.itemView.setOnClickListener(v -> {
-            // Use getBindingAdapterPosition() to get the current position in the list
+            // getBindingAdapterPosition() to get the current position in the list
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
 
@@ -86,12 +88,11 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
             } else {
                 selectedPosition = currentPos;
                 if (listener != null) {
-                    // Pull the model from the list using the fresh position
                     listener.onWalkClick(walks.get(currentPos));
                 }
             }
 
-            // Refresh old and new positions
+            // refresh old and new positions
             if (old != RecyclerView.NO_POSITION)
                 notifyItemChanged(old);
 
@@ -99,7 +100,8 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
                 notifyItemChanged(selectedPosition);
         });
 
-        // ---------- ROUTE BUTTON ----------
+        // tick button to choose walk
+        // -------------------------------------------------------------------------------
         holder.tick.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION && listener != null) {
@@ -118,7 +120,8 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         return walks.size();
     }
 
-    // ---------------- VIEW HOLDER ----------------
+    // view holder
+    // -------------------------------------------------------------------------------
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name, distance;
@@ -131,8 +134,6 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
             tick = v.findViewById(R.id.tick);
         }
     }
-
-    // ---------------- DIFFUTIL ----------------
 
     static class DiffCallback extends DiffUtil.Callback {
 

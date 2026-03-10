@@ -16,8 +16,11 @@ playServicesMaps = "19.0.0"
 recyclerview = "1.4.0"
 googleMapsServices = "2.2.0"
 greenCoffee = "3.6.0"
+cucumberAndroid = "7.18.1"
 
 [libraries]
+
+cucumber-android = { group = "io.cucumber", name = "cucumber-android", version.ref = "cucumberAndroid" }
 com-google-firebase-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
 espresso-core-v320 = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }

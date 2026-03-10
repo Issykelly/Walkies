@@ -40,6 +40,8 @@ public interface MysteryWalksContract {
         void getLastLocation(LocationCallback cb);
         void saveCompletion();
 
+        void setInitialDistance(int dist);
+
         interface Callback<T>{ void call(T data); }
         interface LocationCallback{ void call(android.location.Location loc); }
     }

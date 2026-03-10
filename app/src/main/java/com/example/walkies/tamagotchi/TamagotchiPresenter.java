@@ -1,21 +1,38 @@
 package com.example.walkies.tamagotchi;
 
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.example.walkies.R;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.ZonedDateTime;
 
 public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
     private final TamagotchiContract.View view;
     private final TamagotchiContract.Model model;
+    private final TamagotchiUI ui;
     private final TamagotchiRepository repository;
 
     public TamagotchiPresenter(TamagotchiContract.View view,
                                TamagotchiContract.Model model,
+                               TamagotchiUI ui,
                                TamagotchiRepository repository){
         this.view = view;
         this.model = model;
+        this.ui = ui;
         this.repository = repository;
     }
 
@@ -36,6 +53,12 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         model.coins(repository.getCoins());
         model.xp(repository.getXP());
         model.level(repository.getLevel());
+        model.setLifetimeXP(repository.getLifetimeXP());
+        model.setLifetimeCoins(repository.getLifetimeCoins());
+        model.setLifetimeCircular(repository.getLifetimeCircular());
+        model.setLifetimeMystery(repository.getLifetimeMystery());
+        model.setLifetimeFed(repository.getLifetimeFed());
+        model.setLifetimeBathed(repository.getLifetimeBathed());
 
         model.setOwnedHats(repository.getOwnedHats());
         model.setSelectedHat(repository.getSelectedHat());
@@ -49,8 +72,12 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     @Override
     public void saveStats() {
         repository.saveStats(model.getHunger(), model.getClean(), model.getWalked());
-        repository.saveXPandLevel(model.getXP(), model.getLevel());
-        repository.saveCoins(model.getCoins());
+        repository.saveXPandLevel(model.getXP(), model.getLevel(), model.getLifetimeXP());
+        repository.saveCoins(model.getCoins(), model.getLifetimeCoins());
+        repository.saveLifetimeCircular(model.getLifetimeCircular());
+        repository.saveLifetimeMystery(model.getLifetimeMystery());
+        repository.saveLifetimeFed(model.getLifetimeFed());
+        repository.saveLifetimeBathed(model.getLifetimeBathed());
         repository.saveTime(System.currentTimeMillis() / 1000);
 
         repository.saveOwnedHats(model.getOwnedHats());
@@ -76,17 +103,115 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     }
 
     @Override
-    public void onWalkClicked(){
-        view.showWalkOptions();
+    public void onWalkClicked() {
+        new Thread(() -> {
+            boolean isNight = fetchSunsetTime(model.getCity());
+            Log.d("isNight", String.valueOf(isNight));
+            
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (isNight) {
+                    ui.showNightWalkWarning(ui::showWalkOptions);
+                } else {
+                    ui.showWalkOptions();
+                }
+            });
+        }).start();
+    }
+
+    private boolean fetchSunsetTime(String city) {
+        try {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            DocumentSnapshot doc = Tasks.await(
+                    db.collection("Cities")
+                            .document(city)
+                            .get()
+            );
+
+            if (doc.exists()) {
+
+                GeoPoint geo = doc.getGeoPoint("Location");
+                Log.d("SunCheck", "Geopoint: " + geo);
+
+
+                if (geo != null) {
+
+                    double lat = geo.getLatitude();
+                    double lng = geo.getLongitude();
+
+                    URL url = new URL(
+                            "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng + "&formatted=0"
+                    );
+
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+                    BufferedReader reader =
+                            new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+
+                    reader.close();
+
+                    JSONObject json = new JSONObject(sb.toString());
+                    JSONObject results = json.getJSONObject("results");
+
+                    String sunsetStr = results.getString("sunset");
+                    String sunriseStr = results.getString("sunrise");
+
+                    ZonedDateTime now = ZonedDateTime.now();
+
+                    ZonedDateTime sunsetTime = ZonedDateTime.parse(sunsetStr)
+                            .withZoneSameInstant(now.getZone());
+
+                    ZonedDateTime sunriseTime = ZonedDateTime.parse(sunriseStr)
+                            .withZoneSameInstant(now.getZone());
+
+                    return now.isAfter(sunsetTime) || now.isBefore(sunriseTime);
+                }
+            }
+
+        } catch (Exception e) {
+            Log.e("SunsetCheck", "Error fetching sunset", e);
+        }
+        return false;
+    }
+
+    @Override
+    public void onLevelClicked() {
+        ui.showCurrentLevelDialog(model.getLevel(), model.getXP());
+    }
+
+    @Override
+    public void onSettingsClicked(){
+        ui.showSettingsDialog();
+    }
+
+    @Override
+    public void onLifetimeStatsRequested() {
+        ui.showLifetimeStatsDialog(
+                model.getLifetimeXP(),
+                model.getLifetimeCoins(),
+                model.getLifetimeCircular(),
+                model.getLifetimeMystery(),
+                model.getLifetimeFed(),
+                model.getLifetimeBathed()
+        );
     }
 
     private void updateUI(){
         view.updateHunger(model.getHunger());
         view.updateClean(model.getClean());
         view.updateWalk(model.getWalked());
-
+        boolean leveledUp = model.checkXPLevels();
         view.updateUI();
-
+        if (leveledUp) {
+            ui.showLevelUpDialog(model.getLevel());
+        }
         int happiness = model.getHunger() + model.getClean() + model.getWalked();
         Log.d("Happiness", String.valueOf(happiness));
         if (happiness >= 250) {

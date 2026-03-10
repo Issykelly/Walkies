@@ -36,10 +36,25 @@
         app:srcCompat="@android:drawable/ic_menu_revert" />
 
     <ImageButton
-        android:id="@+id/confirmButton"
+        android:id="@+id/helpButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginStart="92dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/rounded_button_border"
+        android:contentDescription="@string/help_button"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_help" />
+
+    <ImageButton
+        android:id="@+id/confirmButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="168dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/confirm"
@@ -576,12 +591,14 @@
         android:visibility="visible"
         app:constraint_referenced_ids="LevelImage,level" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/LevelImage"
         android:layout_width="56dp"
         android:layout_height="66dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
+        android:background="#00FFFFFF"
+        android:scaleType="centerCrop"
         android:src="@drawable/level"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -625,5 +642,29 @@
         app:layout_constraintStart_toEndOf="@+id/coinsImage"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.254" />
+
+    <TextView
+        android:id="@+id/foodHint"
+        android:layout_width="304dp"
+        android:layout_height="98dp"
+        android:text="@string/food_hint"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/Dog" />
+
+    <TextView
+        android:id="@+id/bathHint"
+        android:layout_width="304dp"
+        android:layout_height="98dp"
+        android:text="@string/bath_hint"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/Dog" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -33,7 +33,7 @@ public class walkModel {
         return latitude;
     }
 
-    public String[] getHints() { return hints;} // may return null}
+    public String[] getHints() { return hints;} // may return null
 
     public boolean isSelected() {
         return isSelected;

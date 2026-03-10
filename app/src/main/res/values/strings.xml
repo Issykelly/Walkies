@@ -8,6 +8,7 @@
     <string name="sponge_minigame_desc">floating sponge, to be dragged across the dog when bathing</string>
     <string name="burger_desc">go to the burger menu, with different settings and stats </string>
     <string name="back_desc">go back, which navigates the user out of their current action (e.g feeding, bathing).</string>
+    <string name="help_desc">get help on how to play the game</string>
     <string name="dress_desc">go to dressing, to navigate to the clothes shop</string>
     <string name="food_desc">feed the dog to refill the hunger needs.</string>
     <string name="map_desc">walk the dog to refill its walk need! opens the map to navigate users on a walk.</string>
@@ -50,4 +51,23 @@
     <string name="bathe">Bathe</string>
     <string name="walk">Walk</string>
     <string name="dress">Dress</string>
+    <string name="settings">Settings</string>
+    <string name="stats">Stats</string>
+    <string name="back_to_game">Back to game</string>
+
+    <string name="lifetime_stats_title">Lifetime Stats</string>
+    <string name="lifetime_xp">Lifetime XP: %1$d</string>
+    <string name="lifetime_coins">Lifetime Coins: %1$d</string>
+    <string name="circular_walks_stat">Circular Walks: %1$d</string>
+    <string name="mystery_walks_stat">Mystery Walks: %1$d</string>
+    <string name="times_fed">Times Fed: %1$d</string>
+    <string name="times_bathed">Times Bathed: %1$d</string>
+    <string name="back">Back</string>
+    <string name="level_up">LEVEL UP!</string>
+    <string name="night_walk_warning">Your dog is tired and doesn\'t want to walk as it\'s night. If you choose to walk, please agree to take well lit paths and never take risks.</string>
+    <string name="i_agree_to_be_safe">I agree to be safe</string>
+    <string name="cancel">Cancel</string>
+    <string name="help_button">button to show users how to use the app.</string>
+    <string name="food_hint">click and hold the selected food, and drag to your pets mouth!</string>
+    <string name="bath_hint">grab the sponge and rub it across your dog to clean him!</string>
 </resources>
