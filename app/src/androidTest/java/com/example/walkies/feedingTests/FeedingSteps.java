@@ -1,6 +1,10 @@
 package com.example.walkies.feedingTests;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.View;
+
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.walkies.R;
 import com.mauriciotogneri.greencoffee.GreenCoffeeSteps;
@@ -21,6 +25,13 @@ import androidx.test.espresso.action.Swipe;
 import androidx.test.espresso.matcher.ViewMatchers;
 
 public class FeedingSteps extends GreenCoffeeSteps {
+    @Given("^I have enough coins to buy food$")
+    public void iHaveEnoughCoinsToBuyFood() {
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences prefs = context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
+        prefs.edit().putInt("coins", 1000).apply();
+    }
+
     @Given("^I am on the Tamagotchi screen$")
     public void iAmOnTheTamagotchiScreen() {
         onView(ViewMatchers.withId(R.id.main)).check(matches(isDisplayed()));

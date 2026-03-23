@@ -15,10 +15,10 @@ public interface MysteryWalksContract {
         void openMap(double lat,double lon);
         void openTamagotchi();
 
+        void closeActivity();
+
         boolean hasLocationPermission();
         void requestLocationPermission();
-
-        void getMaxHint();
     }
 
     interface Presenter {
@@ -41,6 +41,8 @@ public interface MysteryWalksContract {
         void saveCompletion();
 
         void setInitialDistance(int dist);
+        void setMaxHint(int hint);
+        void reset();
 
         interface Callback<T>{ void call(T data); }
         interface LocationCallback{ void call(android.location.Location loc); }

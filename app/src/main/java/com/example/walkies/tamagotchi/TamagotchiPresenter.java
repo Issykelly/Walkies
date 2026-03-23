@@ -17,7 +17,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
@@ -25,6 +30,10 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     private final TamagotchiContract.Model model;
     private final TamagotchiUI ui;
     private final TamagotchiRepository repository;
+
+    private ZonedDateTime cachedSunrise;
+    private ZonedDateTime cachedSunset;
+    private String cachedCity;
 
     public TamagotchiPresenter(TamagotchiContract.View view,
                                TamagotchiContract.Model model,
@@ -39,6 +48,8 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     @Override
     public void attach() {
         loadStats();
+        // pre-fetch sunset time to avoid delay when clicking walk
+        new Thread(() -> fetchSunsetTime(model.getCity())).start();
     }
 
     @Override
@@ -49,11 +60,23 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         model.feed(repository.getHunger() - model.getHunger());
         model.clean(repository.getClean() - model.getClean());
         model.walk(repository.getWalked() - model.getWalked());
+        model.setCity(repository.getCity());
 
         model.coins(repository.getCoins());
         model.xp(repository.getXP());
         model.level(repository.getLevel());
         model.setLifetimeXP(repository.getLifetimeXP());
+        
+        // handle monthly reset
+        String currentMonth = new SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(new Date());
+        if (!currentMonth.equals(repository.getLastMonth())) {
+            model.setMonthlyXP(0);
+            model.setLastMonth(currentMonth);
+        } else {
+            model.setMonthlyXP(repository.getMonthlyXP());
+            model.setLastMonth(repository.getLastMonth());
+        }
+
         model.setLifetimeCoins(repository.getLifetimeCoins());
         model.setLifetimeCircular(repository.getLifetimeCircular());
         model.setLifetimeMystery(repository.getLifetimeMystery());
@@ -72,7 +95,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     @Override
     public void saveStats() {
         repository.saveStats(model.getHunger(), model.getClean(), model.getWalked());
-        repository.saveXPandLevel(model.getXP(), model.getLevel(), model.getLifetimeXP());
+        repository.saveXPandLevel(model.getXP(), model.getLevel(), model.getLifetimeXP(), model.getMonthlyXP(), model.getLastMonth());
         repository.saveCoins(model.getCoins(), model.getLifetimeCoins());
         repository.saveLifetimeCircular(model.getLifetimeCircular());
         repository.saveLifetimeMystery(model.getLifetimeMystery());
@@ -82,6 +105,24 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
         repository.saveOwnedHats(model.getOwnedHats());
         repository.saveSelectedHat(model.getSelectedHat());
+
+        updateFirestoreStats();
+    }
+
+    private void updateFirestoreStats() {
+        String username = repository.getUsername().toLowerCase();
+        if (username != null && !username.isEmpty()) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("lifetimeXP", model.getLifetimeXP());
+            updates.put("monthlyXP", model.getMonthlyXP());
+            updates.put("level", model.getLevel());
+            updates.put("city", model.getCity());
+            
+            db.collection("Users").document(username)
+                    .update(updates)
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error updating stats", e));
+        }
     }
 
     @Override
@@ -93,6 +134,9 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     @Override
     public void onFeed(int value){
         model.feed(value);
+        if (!repository.isMuted()) {
+            view.playEatingSound();
+        }
         updateUI();
     }
 
@@ -104,6 +148,19 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
     @Override
     public void onWalkClicked() {
+        ZonedDateTime now = ZonedDateTime.now();
+        if (cachedCity != null && cachedCity.equals(model.getCity()) && cachedSunrise != null && cachedSunset != null) {
+            if (now.toLocalDate().equals(cachedSunrise.toLocalDate())) {
+                boolean isNight = now.isAfter(cachedSunset) || now.isBefore(cachedSunrise);
+                if (isNight) {
+                    ui.showNightWalkWarning(ui::showWalkOptions);
+                } else {
+                    ui.showWalkOptions();
+                }
+                return;
+            }
+        }
+
         new Thread(() -> {
             boolean isNight = fetchSunsetTime(model.getCity());
             Log.d("isNight", String.valueOf(isNight));
@@ -119,66 +176,78 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     }
 
     private boolean fetchSunsetTime(String city) {
+        if (city == null || city.isEmpty()) return false;
+
+        ZonedDateTime now = ZonedDateTime.now();
+        if (city.equals(cachedCity) && cachedSunrise != null && cachedSunset != null) {
+            if (now.toLocalDate().equals(cachedSunrise.toLocalDate())) {
+                return now.isAfter(cachedSunset) || now.isBefore(cachedSunrise);
+            }
+        }
+
         try {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
 
             DocumentSnapshot doc = Tasks.await(
-                    db.collection("Cities")
-                            .document(city)
-                            .get()
+                    db.collection("Cities").document(city).get()
             );
 
-            if (doc.exists()) {
-
-                GeoPoint geo = doc.getGeoPoint("Location");
-                Log.d("SunCheck", "Geopoint: " + geo);
-
-
-                if (geo != null) {
-
-                    double lat = geo.getLatitude();
-                    double lng = geo.getLongitude();
-
-                    URL url = new URL(
-                            "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng + "&formatted=0"
-                    );
-
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-                    BufferedReader reader =
-                            new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                    }
-
-                    reader.close();
-
-                    JSONObject json = new JSONObject(sb.toString());
-                    JSONObject results = json.getJSONObject("results");
-
-                    String sunsetStr = results.getString("sunset");
-                    String sunriseStr = results.getString("sunrise");
-
-                    ZonedDateTime now = ZonedDateTime.now();
-
-                    ZonedDateTime sunsetTime = ZonedDateTime.parse(sunsetStr)
-                            .withZoneSameInstant(now.getZone());
-
-                    ZonedDateTime sunriseTime = ZonedDateTime.parse(sunriseStr)
-                            .withZoneSameInstant(now.getZone());
-
-                    return now.isAfter(sunsetTime) || now.isBefore(sunriseTime);
-                }
+            if (!doc.exists()) {
+                Log.e("SunCheck", "City document not found: " + city);
+                return false;
             }
 
+            GeoPoint geo = doc.getGeoPoint("Location");
+            if (geo == null) {
+                Log.e("SunCheck", "GeoPoint missing for city: " + city);
+                return false;
+            }
+
+            double lat = geo.getLatitude();
+            double lng = geo.getLongitude();
+            Log.d("SunCheck", "City coordinates: lat=" + lat + ", lng=" + lng);
+
+            // call sunrise-sunset API
+            URL url = new URL(
+                    "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng + "&formatted=0"
+            );
+
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+
+            JSONObject json = new JSONObject(sb.toString());
+            JSONObject results = json.getJSONObject("results");
+
+            String sunriseStr = results.getString("sunrise");
+            String sunsetStr = results.getString("sunset");
+
+            ZonedDateTime sunriseUtc = ZonedDateTime.parse(sunriseStr);
+            ZonedDateTime sunsetUtc = ZonedDateTime.parse(sunsetStr);
+
+            ZonedDateTime sunriseLocal = sunriseUtc.withZoneSameInstant(now.getZone());
+            ZonedDateTime sunsetLocal = sunsetUtc.withZoneSameInstant(now.getZone());
+
+            // Cache the results
+            cachedSunrise = sunriseLocal;
+            cachedSunset = sunsetLocal;
+            cachedCity = city;
+
+            Log.d("SunCheck", "Now: " + now);
+            Log.d("SunCheck", "Sunrise: " + sunriseLocal);
+            Log.d("SunCheck", "Sunset: " + sunsetLocal);
+
+            boolean isNight = now.isAfter(sunsetLocal) || now.isBefore(sunriseLocal);
+            Log.d("SunCheck", "Is night: " + isNight);
+            return isNight;
+
         } catch (Exception e) {
-            Log.e("SunsetCheck", "Error fetching sunset", e);
+            Log.e("SunCheck", "Error fetching sunset/sunrise", e);
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -201,6 +270,28 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
                 model.getLifetimeFed(),
                 model.getLifetimeBathed()
         );
+    }
+
+    @Override
+    public void onLeaderboardRequested() {
+        ui.showLeaderboardDialog();
+    }
+
+    @Override
+    public void onSettingsDetailsRequested() {
+        ui.showSettingsDetailsDialog(
+                repository.getUsername(),
+                repository.getCity(),
+                repository.isMuted()
+        );
+    }
+
+    @Override
+    public void onSettingsSaved(String newCity, boolean muted) {
+        model.setCity(newCity);
+        repository.saveCity(newCity);
+        repository.saveMuted(muted);
+        saveStats();
     }
 
     private void updateUI(){

@@ -22,18 +22,20 @@ import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
 import com.example.walkies.walksAdapter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MysteryWalks extends AppCompatActivity
         implements MysteryWalksContract.View {
 
     private static final int PERMISSION_ID = 44;
 
-    private MysteryWalksPresenter presenter;
-    private MysteryWalksModel model;
+    private MysteryWalksContract.Presenter presenter;
 
     private RecyclerView rv;
+    private walksAdapter adapter;
     private Group hintGroup;
     private TextView hintTxt, hintNum, dist;
-    private int maxHintIndex = 0;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -58,51 +60,58 @@ public class MysteryWalks extends AppCompatActivity
 
         back.setOnClickListener(v -> openTamagotchi());
 
+        rv.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new walksAdapter(this, new ArrayList<>(),
+                new walksAdapter.OnWalkClickListener() {
+                    @Override
+                    public void onWalkClick(walkModel w) {}
+
+                    @Override
+                    public void onRouteButtonClick(walkModel w) {
+                        presenter.walkSelected(w);
+                    }
+                });
+        rv.setAdapter(adapter);
+
+        clearIndicators();
+        
         showHints(false);
         showWalkList(true);
 
         presenter.init(getIntent().getBooleanExtra("is_fresh_launch", false));
     }
 
-    // view
-    // ------------------------------------------------------------------------------------------------------------------------
+    private void clearIndicators() {
+        dist.setText(R.string.current_distance);
+        hintTxt.setText(R.string.hint);
+        hintNum.setText(R.string.hint_1);
+    }
 
     @Override
-    public void showWalks(java.util.List<walkModel> walks) {
-
-        walksAdapter ad = new walksAdapter(this, walks,
-                new walksAdapter.OnWalkClickListener() {
-                    public void onWalkClick(walkModel w) {}
-
-                    public void onRouteButtonClick(walkModel w) {
-                        presenter.walkSelected(w);
-                    }
-                });
-
-        rv.setLayoutManager(new LinearLayoutManager(this));
-        rv.setAdapter(ad);
+    public void showWalks(List<walkModel> walks) {
+        adapter.updateData(walks);
     }
 
     @Override
     public void showHint(String t, int i) {
-        if (i > maxHintIndex){
-            maxHintIndex = i;
-            if (model != null){
-                getMaxHint();
-            }
-        }
         hintTxt.setText(t);
-        hintNum.setText("Hint " + i + "/3");
+        hintNum.setText(getString(R.string.hint_1).replace("1", String.valueOf(i)));
     }
 
     @Override
     public void showHints(boolean v) {
         hintGroup.setVisibility(v ? View.VISIBLE : View.GONE);
+        if (!v) {
+            clearIndicators();
+        }
     }
 
     @Override
     public void showDistance(int m) {
-        dist.setText("current distance: " + m + " metres");
+        if (m < 0)
+            dist.setText(R.string.current_distance);
+        else
+            dist.setText(getString(R.string.current_distance) + ": " + m + "m");
     }
 
     @Override
@@ -134,6 +143,11 @@ public class MysteryWalks extends AppCompatActivity
     }
 
     @Override
+    public void closeActivity() {
+        finish();
+    }
+
+    @Override
     public boolean hasLocationPermission() {
         return ActivityCompat.checkSelfPermission(
                 this,
@@ -161,18 +175,15 @@ public class MysteryWalks extends AppCompatActivity
                             g[0] == PackageManager.PERMISSION_GRANTED);
     }
 
-    @Override protected void onResume() {
+    @Override
+    protected void onResume() {
         super.onResume();
         presenter.resume();
     }
 
+
     @Override protected void onPause() {
         super.onPause();
         presenter.pause();
-    }
-
-    @Override
-    public void getMaxHint(){
-        model.maxHint = maxHintIndex;
     }
 }

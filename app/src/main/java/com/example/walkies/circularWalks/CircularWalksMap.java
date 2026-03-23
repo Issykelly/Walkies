@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -20,10 +21,10 @@ import com.example.walkies.R;
 import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
 import com.example.walkies.walksAdapter;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.*;
 import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.*;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,18 @@ public class CircularWalksMap extends AppCompatActivity
     private RecyclerView rv;
     private walksAdapter adapter;
     private FrameLayout hintContainer;
+
     private FusedLocationProviderClient client;
+    private LocationRequest locationRequest;
+    private final LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (locationResult == null) return;
+            for (Location loc : locationResult.getLocations()) {
+                presenter.onLocationReceived(loc);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle b) {
@@ -58,19 +70,8 @@ public class CircularWalksMap extends AppCompatActivity
 
         client = LocationServices.getFusedLocationProviderClient(this);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        getLocation();
-
-        double forcedLat = getIntent().getDoubleExtra("force_walk_lat", Double.NaN);
-        double forcedLon = getIntent().getDoubleExtra("force_walk_lon", Double.NaN);
-
-        if (!Double.isNaN(forcedLat) && !Double.isNaN(forcedLon)) {
-            presenter.startForcedWalk(new LatLng(forcedLat, forcedLon));
-        }
-
+        // Back button
+        // ---------------------------------------------------------
         ImageButton backBtn = findViewById(R.id.backButton);
         backBtn.setOnClickListener(v -> {
             Intent intent = new Intent(this, Tamagotchi.class);
@@ -78,6 +79,59 @@ public class CircularWalksMap extends AppCompatActivity
             startActivity(intent);
             finish();
         });
+
+        // Permissions
+        // ---------------------------------------------------------
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        } else {
+            startLocationUpdates();
+        }
+    }
+
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            return;
+
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+                .setMinUpdateDistanceMeters(5)
+                .build();
+
+        client.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    private void stopLocationUpdates() {
+        client.removeLocationUpdates(locationCallback);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        presenter.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        presenter.onPause();
+        stopLocationUpdates();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopLocationUpdates();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startLocationUpdates();
+        }
     }
 
     @Override
@@ -91,25 +145,14 @@ public class CircularWalksMap extends AppCompatActivity
         presenter.onMapReady();
     }
 
-    // location updates
-    // -------------------------------------------------------------------------------
-    public void updateLocation(Location location){
-        presenter.onLocationReceived(location);
-    }
-
-    // view methods
-    // -------------------------------------------------------------------------------
+    // View Methods
+    // ---------------------------------------------------------
 
     @Override
     public void showWalks(List<walkModel> walks) {
-
         if (adapter == null) {
-
-            adapter = new walksAdapter(
-                    this,
-                    new ArrayList<>(walks),
+            adapter = new walksAdapter(this, new ArrayList<>(walks),
                     new walksAdapter.OnWalkClickListener() {
-
                         @Override
                         public void onWalkClick(walkModel walk) {
                             presenter.onWalkSelected(walk);
@@ -120,30 +163,19 @@ public class CircularWalksMap extends AppCompatActivity
                             presenter.onRouteRequested(walk);
                         }
                     });
-
             rv.setAdapter(adapter);
-
         } else {
             adapter.updateData(walks);
         }
     }
 
-    public void showHint() {
-        hintContainer.setVisibility(android.view.View.VISIBLE);
-    }
-
     @Override
     public void showMarkers(List<walkModel> walks) {
-
         if (map == null) return;
-
         map.clear();
-
         for (walkModel walk : walks) {
-            map.addMarker(new MarkerOptions()
-                    .position(new LatLng(
-                            walk.getWalkLatitude(),
-                            walk.getWalkLongitude()))
+            map.addMarker(new com.google.android.gms.maps.model.MarkerOptions()
+                    .position(new LatLng(walk.getWalkLatitude(), walk.getWalkLongitude()))
                     .title(walk.getWalkName()));
         }
     }
@@ -151,31 +183,30 @@ public class CircularWalksMap extends AppCompatActivity
     @Override
     public void showForcedWalkMarker(LatLng pendingForcedWalkDest) {
         if (map == null) return;
-
         map.clear();
-        map.addMarker(new MarkerOptions()
+        map.addMarker(new com.google.android.gms.maps.model.MarkerOptions()
                 .position(pendingForcedWalkDest)
                 .title("Mystery Location"));
     }
 
     @Override
     public void showRoute(List<LatLng> points) {
-
         runOnUiThread(() -> {
             if (map == null) return;
 
-            if (polyline == null)
-                polyline = map.addPolyline(
-                        new PolylineOptions()
-                                .width(12f)
-                                .color(0xFF2196F3)
-                                .addAll(points)
+            if (polyline == null) {
+                polyline = map.addPolyline(new com.google.android.gms.maps.model.PolylineOptions()
+                        .width(12f)
+                        .color(0xFF2196F3)
+                        .addAll(points)
                 );
-            else
+            } else {
                 polyline.setPoints(points);
+            }
         });
     }
 
+    @Override
     public void moveCamera(LatLng latLng, float zoom) {
         if (map != null) {
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
@@ -198,30 +229,8 @@ public class CircularWalksMap extends AppCompatActivity
         return this;
     }
 
-    public void getLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        client.getLastLocation().addOnSuccessListener(location -> {
-            if (location != null)
-                updateLocation(location);
-        });
-    }
-
-
-
-    // lifecycle
-    // -------------------------------------------------------------------------------
-
     @Override
-    protected void onResume() {
-        super.onResume();
-        presenter.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        presenter.onPause();
+    public void showHint() {
+        hintContainer.setVisibility(android.view.View.VISIBLE);
     }
 }

@@ -29,15 +29,11 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         setHasStableIds(true);
     }
 
-    // ---------------- UPDATE DATA (DIFFUTIL) ----------------
-
     public void updateData(List<walkModel> newList) {
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(walks, newList));
         walks = new ArrayList<>(newList);
         diff.dispatchUpdatesTo(this);
     }
-
-    // ---------------- SELECTION ----------------
 
     public void setSelectedWalk(walkModel walk) {
         int newPos = walks.indexOf(walk);
@@ -46,14 +42,9 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         int oldPos = selectedPosition;
         selectedPosition = newPos;
 
-        if (oldPos != RecyclerView.NO_POSITION)
-            notifyItemChanged(oldPos);
-
+        if (oldPos != RecyclerView.NO_POSITION) notifyItemChanged(oldPos);
         notifyItemChanged(newPos);
     }
-
-    // -adapter
-    // -------------------------------------------------------------------------------
 
     @NonNull
     @Override
@@ -71,37 +62,23 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         holder.name.setText(model.getWalkName());
         holder.distance.setText(String.format(Locale.getDefault(), "%.2f miles", model.getWalkDistance()));
 
-        holder.tick.setVisibility(selectedPosition == position
-                ? View.VISIBLE : View.GONE);
+        holder.tick.setVisibility(selectedPosition == position ? View.VISIBLE : View.GONE);
 
-        // on click logic
-        // -------------------------------------------------------------------------------
         holder.itemView.setOnClickListener(v -> {
-            // getBindingAdapterPosition() to get the current position in the list
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos == RecyclerView.NO_POSITION) return;
 
             int old = selectedPosition;
+            selectedPosition = (selectedPosition == currentPos) ? RecyclerView.NO_POSITION : currentPos;
 
-            if (selectedPosition == currentPos) {
-                selectedPosition = RecyclerView.NO_POSITION;
-            } else {
-                selectedPosition = currentPos;
-                if (listener != null) {
-                    listener.onWalkClick(walks.get(currentPos));
-                }
+            if (selectedPosition != RecyclerView.NO_POSITION && listener != null) {
+                listener.onWalkClick(walks.get(currentPos));
             }
 
-            // refresh old and new positions
-            if (old != RecyclerView.NO_POSITION)
-                notifyItemChanged(old);
-
-            if (selectedPosition != RecyclerView.NO_POSITION)
-                notifyItemChanged(selectedPosition);
+            if (old != RecyclerView.NO_POSITION) notifyItemChanged(old);
+            if (selectedPosition != RecyclerView.NO_POSITION) notifyItemChanged(selectedPosition);
         });
 
-        // tick button to choose walk
-        // -------------------------------------------------------------------------------
         holder.tick.setOnClickListener(v -> {
             int currentPos = holder.getBindingAdapterPosition();
             if (currentPos != RecyclerView.NO_POSITION && listener != null) {
@@ -112,16 +89,13 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
 
     @Override
     public long getItemId(int position) {
-        return walks.get(position).hashCode();
+        return walks.get(position).getWalkName().hashCode(); // stable id
     }
 
     @Override
     public int getItemCount() {
         return walks.size();
     }
-
-    // view holder
-    // -------------------------------------------------------------------------------
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name, distance;
@@ -136,7 +110,6 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
     }
 
     static class DiffCallback extends DiffUtil.Callback {
-
         private final List<walkModel> oldList;
         private final List<walkModel> newList;
 
@@ -149,14 +122,18 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         public int getNewListSize() { return newList.size(); }
 
         public boolean areItemsTheSame(int oldPos, int newPos) {
-            return oldList.get(oldPos).getWalkName()
-                    .equals(newList.get(newPos).getWalkName());
+            return oldList.get(oldPos).getWalkName().equals(newList.get(newPos).getWalkName());
         }
 
         public boolean areContentsTheSame(int oldPos, int newPos) {
             walkModel o = oldList.get(oldPos);
             walkModel n = newList.get(newPos);
-            return o.getWalkDistance() == n.getWalkDistance();
+
+            boolean sameName = o.getWalkName().equals(n.getWalkName());
+            boolean sameDistance = o.getWalkDistance() == n.getWalkDistance();
+            boolean sameHints = Arrays.equals(o.getHints(), n.getHints());
+
+            return sameName && sameDistance && sameHints;
         }
     }
 }

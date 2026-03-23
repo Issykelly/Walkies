@@ -41,8 +41,10 @@
 
     <TextView
         android:id="@+id/distance"
-        android:layout_width="312dp"
-        android:layout_height="34dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:text="@string/current_distance"
         android:textAlignment="center"
         android:textSize="24sp"

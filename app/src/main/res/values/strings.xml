@@ -29,12 +29,12 @@
     <string name="circular">Circular</string>
     <string name="mystery">Mystery</string>
     <string name="hint_1">hint 1/3</string>
-    <string name="current_distance">current distance;</string>
+    <string name="current_distance">current distance</string>
     <string name="look_around">Why not take this time to look around?</string>
     <string name="give_up">Give up?</string>
     <string name="next">next</string>
     <string name="prev">prev</string>
-    <string name="hint">hint;</string>
+    <string name="hint">hint</string>
     <string name="confirm">button to confirm choice</string>
     <string name="no_hat">no hat</string>
     <string name="none">None</string>
@@ -70,4 +70,21 @@
     <string name="help_button">button to show users how to use the app.</string>
     <string name="food_hint">click and hold the selected food, and drag to your pets mouth!</string>
     <string name="bath_hint">grab the sponge and rub it across your dog to clean him!</string>
+
+    <!-- Onboarding strings -->
+    <string name="welcome_to_walkies">Welcome to Walkies!</string>
+    <string name="welcome_message">Get ready to explore the outdoors with your new digital companion. Let\'s get you set up!</string>
+    <string name="continue_button">Continue</string>
+    <string name="setup_profile">Set up your profile</string>
+    <string name="enter_username">Username</string>
+    <string name="select_city">Select your city</string>
+    <string name="choose_your_goal">Choose your goal</string>
+    <string name="goal_message">How do you plan to use Walkies?</string>
+    <string name="goal_leave_house">Leave the house more</string>
+    <string name="goal_friends">Spend time with friends</string>
+    <string name="finish">Finish</string>
+
+    <!-- Leaderboard strings -->
+    <string name="leaderboard">Leaderboard</string>
+    <string name="loading_leaderboard">Loading leaderboard...</string>
 </resources>

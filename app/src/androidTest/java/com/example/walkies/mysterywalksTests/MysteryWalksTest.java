@@ -1,17 +1,15 @@
-package com.example.walkies.feedingTests;
+package com.example.walkies.mysterywalksTests;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
-import androidx.test.core.app.ActivityScenario;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.example.walkies.tamagotchi.Tamagotchi;
+import com.example.walkies.mysteryWalks.MysteryWalks;
 import com.mauriciotogneri.greencoffee.GreenCoffeeConfig;
 import com.mauriciotogneri.greencoffee.GreenCoffeeTest;
 import com.mauriciotogneri.greencoffee.ScenarioConfig;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,9 +18,12 @@ import java.io.IOException;
 
 @RunWith(Parameterized.class)
 @LargeTest
-public class FeedingTest extends GreenCoffeeTest {
+public class MysteryWalksTest extends GreenCoffeeTest {
 
-    public FeedingTest(ScenarioConfig scenarioConfig) {
+    @Rule
+    public ActivityScenarioRule<MysteryWalks> activityRule = new ActivityScenarioRule<>(MysteryWalks.class);
+
+    public MysteryWalksTest(ScenarioConfig scenarioConfig) {
         super(scenarioConfig);
     }
 
@@ -33,23 +34,13 @@ public class FeedingTest extends GreenCoffeeTest {
                         InstrumentationRegistry.getInstrumentation()
                                 .getContext()
                                 .getAssets()
-                                .open("features/feeding.feature")
+                                .open("features/mysterywalks.feature")
                 )
                 .scenarios();
     }
 
     @Test
     public void test() {
-        // ensure the user has coins before the activity even starts
-        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        SharedPreferences prefs = context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
-        prefs.edit()
-                .putInt("coins", 1000)
-                .putBoolean("first_launch", false)
-                .apply();
-
-        try (ActivityScenario<Tamagotchi> scenario = ActivityScenario.launch(Tamagotchi.class)) {
-            start(new FeedingSteps());
-        }
+        start(new MysteryWalksSteps());
     }
 }

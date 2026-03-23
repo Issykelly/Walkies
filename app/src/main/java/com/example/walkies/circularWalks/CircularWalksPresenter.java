@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.example.walkies.tamagotchi.Tamagotchi;
 import com.example.walkies.walkModel;
@@ -19,6 +20,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     protected CircularWalksContract.Model model;
 
     // Walk state
+    // ---------------------------------------------------------
     private walkModel activeWalk;
     private LatLng startPoint;
     private Location lastLocation;
@@ -32,23 +34,25 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private boolean initialZoom = false;
     private boolean mapReady = false;
+    private boolean walksFetched = false;
 
     private LatLng pendingCameraTarget = null;
     private float pendingCameraZoom = 12f;
 
-    // movement tracking
-
-    // thresholds
+    // movement thresholds
+    // ---------------------------------------------------------
     private static final float PROGRESS_THRESHOLD = 15f;
-    private static final float ARRIVAL_THRESHOLD = 30f;
+    private static final float ARRIVAL_THRESHOLD = 40f;
     private static final float OFF_ROUTE_THRESHOLD = 25f;
 
     // route recalculation cooldown
+    // ---------------------------------------------------------
     private static final long RECALC_COOLDOWN_MS = 15000;
     private long lastRecalcTime = 0;
     private boolean isRecalculating = false;
 
     // loop
+    // ---------------------------------------------------------
     private final Handler routeHandler = new Handler(Looper.getMainLooper());
     private boolean loopRunning = false;
 
@@ -61,25 +65,18 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         model = m;
     }
 
-    // on map ready
-    // -------------------------------------------------------------------------------
-
+    // Map Ready
+    // ---------------------------------------------------------
     @Override
     public void onMapReady() {
         mapReady = true;
 
-        if (isForcedWalk) {
-
+        if (isForcedWalk && activeWalk != null) {
             renderPendingMarkerIfNeeded();
-
             pendingCameraTarget = new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
             pendingCameraZoom = 15f;
-
         } else if (lastLocation != null) {
-            pendingCameraTarget = new LatLng(
-                    lastLocation.getLatitude(),
-                    lastLocation.getLongitude()
-            );
+            pendingCameraTarget = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
         }
 
         if (pendingCameraTarget != null) {
@@ -90,17 +87,19 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void renderPendingMarkerIfNeeded() {
-        if (mapReady) {
+        if (mapReady && activeWalk != null) {
             view.showForcedWalkMarker(new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude()));
         }
     }
 
-    // handles location updates
-    // -------------------------------------------------------------------------------
-
+    // Location Updates
+    // ---------------------------------------------------------
     @Override
     public void onLocationReceived(Location loc) {
+        if (loc == null) return;
+
         lastLocation = loc;
+        Log.d("CircularWalksPresenter", "Location received: " + loc.getLatitude() + ", " + loc.getLongitude());
 
         if (!initialZoom && mapReady) {
             view.moveCamera(new LatLng(loc.getLatitude(), loc.getLongitude()), 12f);
@@ -109,21 +108,25 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             pendingCameraTarget = new LatLng(loc.getLatitude(), loc.getLongitude());
         }
 
-        if (pendingForcedWalkDest != null)
-            beginForcedWalk(pendingForcedWalkDest);
+        // Start forced walk if pending
+        // ---------------------------------------------------------
+        if (pendingForcedWalkDest != null) beginForcedWalk(pendingForcedWalkDest);
 
-        if (activeWalk == null) {
+        // Fetch walks once
+        // ---------------------------------------------------------
+        if (activeWalk == null && !walksFetched) {
+            walksFetched = true;
+            Log.d("CircularWalksPresenter", "Fetching walks for location...");
             model.fetchWalks(loc.getLatitude(), loc.getLongitude(), walks -> {
+                if (walks == null || walks.isEmpty()) walksFetched = false;
                 view.showWalks(walks);
-                if (!isForcedWalk)
-                    view.showMarkers(walks);
+                if (!isForcedWalk) view.showMarkers(walks);
             });
         }
     }
 
-    // on walk selection
-    // -------------------------------------------------------------------------------
-
+    // Walk Selection
+    // ---------------------------------------------------------
     @Override
     public void onWalkSelected(walkModel walk) {
         view.moveCamera(new LatLng(walk.getWalkLatitude(), walk.getWalkLongitude()), 15f);
@@ -131,7 +134,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     @Override
     public void onRouteRequested(walkModel walk) {
-
         if (lastLocation == null) {
             view.showMessage("Waiting for GPS...");
             return;
@@ -155,26 +157,21 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         view.showHint();
     }
 
-    // main loop
-    // -------------------------------------------------------------------------------
-
+    // Main Route Loop
+    // ---------------------------------------------------------
     private final Runnable routeLoop = new Runnable() {
         @Override
         public void run() {
-            if (!loopRunning) return;
-
-            if (lastLocation != null && activeWalk != null) {
-                view.getLocation();
-                preTrimRoute();
-                updateLiveRoute(lastLocation);
-                checkProximity(lastLocation);
-                if (previousLocation != null) {
-                    scheduleNext();
-                    return;
-                }
+            if (!loopRunning || lastLocation == null || activeWalk == null) {
+                scheduleNext();
+                return;
             }
 
-            previousLocation = lastLocation == null ? null : new Location(lastLocation);
+            preTrimRoute();
+            updateLiveRoute(lastLocation);
+            checkProximity(lastLocation);
+
+            previousLocation = new Location(lastLocation);
             scheduleNext();
         }
     };
@@ -191,13 +188,11 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void scheduleNext() {
-        long dynamicInterval = 1500;
-        routeHandler.postDelayed(routeLoop, dynamicInterval);
+        routeHandler.postDelayed(routeLoop, 1500);
     }
 
-    // routing logic
-    // -------------------------------------------------------------------------------
-
+    // Routing Logic
+    // ---------------------------------------------------------
     private void updateLiveRoute(Location userLocation) {
         if (fullRoutePoints.isEmpty()) return;
 
@@ -217,31 +212,27 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         LatLng closest = null;
         double min = Double.MAX_VALUE;
 
-        for (int i = 0; i < route.size() - 1; i++) {
+        int step = Math.max(1, route.size() / 50);
+        for (int i = 0; i < route.size() - 1; i += step) {
             LatLng a = route.get(i);
-            LatLng b = route.get(i + 1);
-
+            LatLng b = route.get(Math.min(i + 1, route.size() - 1));
             LatLng p = closestPointOnSegment(user, a, b);
             double d = distanceBetween(user, p);
-
             if (d < min) {
                 min = d;
                 closest = p;
             }
         }
+
         return closest != null ? closest : route.get(0);
     }
 
     private LatLng closestPointOnSegment(LatLng p, LatLng a, LatLng b) {
-
         double dx = b.longitude - a.longitude;
         double dy = b.latitude - a.latitude;
-
         if (dx == 0 && dy == 0) return a;
 
-        double t = ((p.longitude - a.longitude) * dx + (p.latitude - a.latitude) * dy)
-                / (dx * dx + dy * dy);
-
+        double t = ((p.longitude - a.longitude) * dx + (p.latitude - a.latitude) * dy) / (dx * dx + dy * dy);
         t = Math.max(0, Math.min(1, t));
 
         return new LatLng(a.latitude + t * dy, a.longitude + t * dx);
@@ -252,14 +243,12 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         int trimCount = 0;
         LatLng user = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-        //view.showMessage(String.valueOf(user));
+        int maxTrim = Math.min(fullRoutePoints.size() - 1, 5);
 
-        for (int i = 1; i < fullRoutePoints.size(); i++) {
+        for (int i = 1; i <= maxTrim; i++) {
             if (distanceBetween(user, fullRoutePoints.get(i)) < PROGRESS_THRESHOLD) {
                 trimCount = i;
-            } else {
-                break;
-            }
+            } else break;
         }
 
         if (trimCount > 0) {
@@ -269,18 +258,15 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void recalculateRoute(LatLng user) {
-
         if (isRecalculating) return;
-
         long now = System.currentTimeMillis();
         if (now - lastRecalcTime < RECALC_COOLDOWN_MS) return;
 
         isRecalculating = true;
         lastRecalcTime = now;
 
-        LatLng target = isReturning
-                ? startPoint
-                : new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
+        LatLng target = isReturning ? startPoint :
+                new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
 
         model.fetchRoute(user, target, pts -> {
             fullRoutePoints.clear();
@@ -293,72 +279,76 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private double distanceBetween(LatLng a, LatLng b) {
         float[] r = new float[1];
-        Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, r);
+        android.location.Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, r);
         return r[0];
     }
 
-
-    // proximity logic
-    // -------------------------------------------------------------------------------
-
+    // Proximity
+    // ---------------------------------------------------------
     private void checkProximity(Location loc) {
-
-        float[] d = new float[1];
+        if (activeWalk == null) return;
 
         LatLng target = isReturning ? startPoint :
                 new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
 
-        Location.distanceBetween(
+        float[] distance = new float[1];
+        android.location.Location.distanceBetween(
                 loc.getLatitude(), loc.getLongitude(),
                 target.latitude, target.longitude,
-                d
+                distance
         );
 
-        if (d[0] < ARRIVAL_THRESHOLD) {
+        Log.d("CircularWalksPresenter", "Distance to target: " + distance[0] + " meters");
 
-            if (isForcedWalk)
+        if (distance[0] < ARRIVAL_THRESHOLD) {
+            Log.d("CircularWalksPresenter", "Reached target!");
+
+            if (isForcedWalk) {
                 completeForcedWalk();
-            else if (!isReturning) {
+            } else if (!isReturning) {
                 isReturning = true;
                 view.showMessage("Reached pin — returning.");
-                recalculateRoute(new LatLng(loc.getLatitude(), loc.getLongitude()));
-            } else
+
+                LatLng userLoc = new LatLng(loc.getLatitude(), loc.getLongitude());
+                LatLng returnTarget = startPoint;
+
+                model.fetchRoute(userLoc, returnTarget, pts -> {
+                    fullRoutePoints.clear();
+                    fullRoutePoints.addAll(pts);
+                    view.showRoute(fullRoutePoints);
+                });
+            } else {
                 completeRegularWalk();
+            }
         }
     }
 
-    // on completion
-    // -------------------------------------------------------------------------------
-
-    public void completeRegularWalk() {
-        finishWalk("Walk completed!");
-    }
-
-    public void completeForcedWalk() {
-        finishWalk("Forced walk completed!");
-    }
+    // Walk Completion
+    // ---------------------------------------------------------
+    public void completeRegularWalk() { finishWalk("Walk completed!"); }
+    public void completeForcedWalk() { finishWalk("Forced walk completed!"); }
 
     private void finishWalk(String msg) {
-
         view.showMessage(msg);
 
-        activeWalk = null;
         fullRoutePoints.clear();
         isReturning = false;
         isForcedWalk = false;
 
         stopRouteLoop();
-
         view.showRoute(fullRoutePoints);
 
-        double maxDistanceMeters = 1609.34;
-        double distanceRatio = Math.min(activeWalk.getWalkDistance() / maxDistanceMeters, 1.0);
+        int earnedXp = 0;
+        if (activeWalk != null) {
+            double maxDistanceMeters = 1609.34;
+            double distanceRatio = Math.min(activeWalk.getWalkDistance() / maxDistanceMeters, 1.0);
+            earnedXp = (int) Math.round(distanceRatio * 200);
+        }
 
-        int earnedXp = (int) Math.round(distanceRatio * 200);
+        activeWalk = null;
 
         Context ctx = view.getContext();
-        var p = ctx.getSharedPreferences("WalkiesPrefs",
-                android.content.Context.MODE_PRIVATE);
+        var p = ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
         int currentXp = p.getInt("xp", 0);
         int currentCoins = p.getInt("coins", 0);
 
@@ -379,25 +369,20 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         view.toggleWalkList(true);
     }
 
-    // forced walk logic (for giving up on mystery walks
-    // -------------------------------------------------------------------------------
-
+    // Forced Walk
+    // ---------------------------------------------------------
     public void startForcedWalk(LatLng dest) {
-
         isForcedWalk = true;
         pendingForcedWalkDest = dest;
 
         if (lastLocation != null) {
             renderPendingMarkerIfNeeded();
             beginForcedWalk(dest);
-        }else
-            view.showMessage("Waiting for GPS...");
+        } else view.showMessage("Waiting for GPS...");
     }
 
     private void beginForcedWalk(LatLng dest) {
-
         activeWalk = new walkModel("Forced Walk", 0, dest.longitude, dest.latitude, null);
-
         startPoint = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
         isReturning = false;
 
@@ -413,14 +398,11 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         pendingForcedWalkDest = null;
     }
 
+    // Lifecycle
+    // ---------------------------------------------------------
+    @Override
+    public void onResume() { startRouteLoop(); }
 
     @Override
-    public void onResume() {
-        startRouteLoop();
-    }
-
-    @Override
-    public void onPause() {
-        stopRouteLoop();
-    }
+    public void onPause() { stopRouteLoop(); }
 }

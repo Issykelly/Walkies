@@ -1,13 +1,13 @@
 package com.example.walkies.tamagotchi;
 
 import android.content.Context;
+import java.util.List;
 import java.util.Set;
 
 public interface TamagotchiContract {
 
     interface View {
 
-        // STATE UPDATES
         void updateHunger(int value);
         void updateClean(int value);
         void updateWalk(int value);
@@ -16,7 +16,6 @@ public interface TamagotchiContract {
         void showDogState(int drawableRes);
         void playAnimation(int[] frames, int delay);
 
-        // SCREEN UI (not events)
         void showFoodMenu();
         void showHatMenu();
         void showSponge();
@@ -26,6 +25,9 @@ public interface TamagotchiContract {
         void showLevelUpPopup(int newLevel);
 
         void tailWagAnimation();
+
+        void playEatingSound();
+        void playBubblesSound();
 
         Context getContext();
     }
@@ -47,6 +49,12 @@ public interface TamagotchiContract {
         void onSettingsClicked();
 
         void onLifetimeStatsRequested();
+
+        void onLeaderboardRequested();
+
+        void onSettingsDetailsRequested();
+
+        void onSettingsSaved(String newCity, boolean muted);
     }
 
     interface Model {
@@ -84,6 +92,12 @@ public interface TamagotchiContract {
 
         int getLifetimeXP();
         void setLifetimeXP(int value);
+
+        int getMonthlyXP();
+        void setMonthlyXP(int value);
+        
+        String getLastMonth();
+        void setLastMonth(String month);
 
         int getLifetimeCoins();
         void setLifetimeCoins(int value);

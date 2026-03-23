@@ -17,6 +17,7 @@ import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.TravelMode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -33,56 +34,128 @@ public class CircularWalksModel implements CircularWalksContract.Model {
 
     @Override
     public void fetchWalks(double lat, double lon, WalksCallback cb) {
-        db.collection("CircularWalks").get().addOnSuccessListener(res -> {
+        db.collection("CircularWalks").get()
+                .addOnSuccessListener(res -> {
+                    List<walkModel> list = new ArrayList<>();
+                    Log.d("CircularWalksModel", "Fetched " + res.size() + " documents from Firestore");
 
-            List<walkModel> list = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : res) {
+                        String name = doc.getString("name");
+                        GeoPoint geo = doc.getGeoPoint("location");
+                        
+                        if (geo == null) {
+                            Log.w("CircularWalksModel", "Document " + doc.getId() + " is missing 'location' field");
+                            continue;
+                        }
 
-            for (QueryDocumentSnapshot doc : res) {
-                String name = doc.getString("name");
-                GeoPoint geo = doc.getGeoPoint("location");
-                if (geo == null) continue;
+                        float[] r = new float[1];
+                        Location.distanceBetween(lat, lon, geo.getLatitude(), geo.getLongitude(), r);
 
-                float[] r = new float[1];
-                Location.distanceBetween(lat, lon, geo.getLatitude(), geo.getLongitude(), r);
+                        list.add(new walkModel(
+                                name,
+                                r[0] / 1609.34,
+                                geo.getLongitude(),
+                                geo.getLatitude(),
+                                null
+                        ));
+                    }
 
-                list.add(new walkModel(
-                        name,
-                        r[0] / 1609.34,
-                        geo.getLongitude(),
-                        geo.getLatitude(),
-                        null
-                ));
+                    list.sort(Comparator.comparingDouble(walkModel::getWalkDistance));
+                    cb.onLoaded(list);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CircularWalksModel", "Error fetching walks: ", e);
+                    cb.onLoaded(new ArrayList<>()); 
+                });
+    }
+
+    private LatLng snapToRoad(LatLng point) {
+        try {
+            var roadsApi = com.google.maps.RoadsApi.nearestRoads(
+                    geoApiContext,
+                    new com.google.maps.model.LatLng(point.latitude, point.longitude)
+            ).await();
+
+            if (roadsApi != null && roadsApi.length > 0) {
+                var snapped = roadsApi[0].location;
+                return new LatLng(snapped.lat, snapped.lng);
             }
 
-            list.sort(Comparator.comparingDouble(walkModel::getWalkDistance));
-            cb.onLoaded(list);
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return point;
     }
+
 
     @Override
     public void fetchRoute(LatLng origin, LatLng dest, RouteCallback cb) {
+            // Snap both points to nearest road
+            // ---------------------------------------------------------
+            LatLng snappedOrigin = snapToRoad(origin);
+            LatLng snappedDest = snapToRoad(dest);
 
+            // Try walking first
+            // ---------------------------------------------------------
+            fetchRouteWithMode(snappedOrigin, snappedDest, TravelMode.WALKING, points -> {
+
+                if (points.isEmpty()) {
+                    fetchRouteWithMode(snappedOrigin, snappedDest, TravelMode.DRIVING, drivingPoints -> {
+
+                        if (drivingPoints.isEmpty()) {
+                            List<LatLng> fallback = new ArrayList<>();
+                            fallback.add(snappedOrigin);
+                            fallback.add(snappedDest);
+
+                            cb.onLoaded(fallback);
+                        } else {
+                            cb.onLoaded(drivingPoints);
+                        }
+                    });
+                } else {
+                    cb.onLoaded(points);
+                }
+
+            });
+    }
+
+
+    private void fetchRouteWithMode(LatLng origin, LatLng dest, TravelMode mode, RouteCallback cb) {
         DirectionsApi.newRequest(geoApiContext)
-                .mode(TravelMode.WALKING)
+                .mode(mode)
                 .origin(new com.google.maps.model.LatLng(origin.latitude, origin.longitude))
                 .destination(new com.google.maps.model.LatLng(dest.latitude, dest.longitude))
                 .setCallback(new PendingResult.Callback<>() {
-
                     @Override
                     public void onResult(DirectionsResult result) {
 
                         List<LatLng> list = new ArrayList<>();
 
                         if (result.routes != null && result.routes.length > 0) {
-                            for (var p : result.routes[0].overviewPolyline.decodePath())
-                                list.add(new LatLng(p.lat, p.lng));
-                        }
 
-                        cb.onLoaded(list);
+                            var route = result.routes[0];
+                            for (var leg : route.legs) {
+                                for (var step : leg.steps) {
+                                    var decoded = step.polyline.decodePath();
+                                    for (var p : decoded) {
+                                        list.add(new LatLng(p.lat, p.lng));
+                                    }
+                                }
+                            }
+                        }
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            cb.onLoaded(list);
+                        });
                     }
 
-                    @Override public void onFailure(Throwable e) {
-                        Log.e("Directions", String.valueOf(e));
+
+                    @Override
+                    public void onFailure(Throwable e) {
+                        Log.e("CircularWalksModel", "API Error for mode " + mode + ": " + e.getMessage());
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            cb.onLoaded(new ArrayList<>());
+                        });
                     }
                 });
     }

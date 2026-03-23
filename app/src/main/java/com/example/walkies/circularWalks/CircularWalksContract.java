@@ -20,8 +20,6 @@ public interface CircularWalksContract {
         void showMarkers(List<walkModel> walks);
         void showForcedWalkMarker(LatLng pendingForcedWalkDest);
 
-        void getLocation();
-
         void showHint();
     }
 

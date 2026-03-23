@@ -1,6 +1,9 @@
 package com.example.walkies;
 
+import android.location.Location;
+
 public class walkModel {
+
     private String name;
     private double distance;
     private double longitude;
@@ -17,45 +20,33 @@ public class walkModel {
         this.hints = hints;
     }
 
-    public String getWalkName() {
-        return name;
+    public String getWalkName() { return name; }
+    public double getWalkDistance() { return distance; }
+    public double getWalkLongitude() { return longitude; }
+    public double getWalkLatitude() { return latitude; }
+    public String[] getHints() { return hints; }
+    public boolean isSelected() { return isSelected; }
+
+    public void setWalkName(String name) { this.name = name; }
+    public void setWalkDistance(double distance) { this.distance = distance; }
+    public void setWalkLongitude(double longitude) { this.longitude = longitude; }
+    public void setWalkLatitude(double latitude) { this.latitude = latitude; }
+    public void setSelected(boolean selected) { isSelected = selected; }
+
+    public void updateDistance(Location userLocation) {
+        float[] results = new float[1];
+        Location.distanceBetween(
+                userLocation.getLatitude(),
+                userLocation.getLongitude(),
+                latitude,
+                longitude,
+                results
+        );
+        distance = results[0] * 0.000621371; // meters → miles if needed
     }
 
-    public double getWalkDistance() {
-        return distance;
-    }
-
-    public double getWalkLongitude() {
-        return longitude;
-    }
-
-    public double getWalkLatitude() {
-        return latitude;
-    }
-
-    public String[] getHints() { return hints;} // may return null
-
-    public boolean isSelected() {
-        return isSelected;
-    }
-
-    public void setWalkName(String name) {
-        this.name = name;
-    }
-
-    public void setWalkDistance(double distance) {
-        this.distance = distance;
-    }
-
-    public void setWalkLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public void setWalkLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public void setSelected(boolean selected) {
-        isSelected = selected;
+    public void reset() {
+        distance = 0;
+        isSelected = false;
     }
 }

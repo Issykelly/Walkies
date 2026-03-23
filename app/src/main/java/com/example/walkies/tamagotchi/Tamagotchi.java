@@ -3,18 +3,15 @@ package com.example.walkies.tamagotchi;
 import static android.view.View.VISIBLE;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.drawable.ClipDrawable;
 import android.graphics.drawable.LayerDrawable;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.HorizontalScrollView;
@@ -22,12 +19,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.DialogFragment;
 
-import com.example.walkies.circularWalks.CircularWalksMap;
-import com.example.walkies.mysteryWalks.MysteryWalks;
 import com.example.walkies.R;
 
 import java.util.HashMap;
@@ -43,11 +36,11 @@ public class Tamagotchi extends AppCompatActivity
     private TamagotchiRepository repository;
     private TamagotchiUI ui;
     private Runnable updateRunnable;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     // views from activity
     // ------------------------------------------------------------------------
-    public static ImageView dog;
+    public ImageView dog;
     private ImageView accessories;
     private ImageView suds;
     private TextView coins;
@@ -65,7 +58,6 @@ public class Tamagotchi extends AppCompatActivity
     private ImageButton burgerMenu;
     private ImageButton backButton;
     private ImageButton tickButton;
-    private ImageButton levelButton;
 
     // menu containers
     // ------------------------------------------------------------------------
@@ -73,7 +65,6 @@ public class Tamagotchi extends AppCompatActivity
     private View foodMenu;
     private HorizontalScrollView hatMenu;
     private View XPandCoins;
-    private View coinGroup;
     private View levelGroup;
 
     // for interactivity mini games
@@ -96,13 +87,34 @@ public class Tamagotchi extends AppCompatActivity
     private int cleanProgress = 0;
     private int hatRes = 0;
 
+    // sound effects
+    // ------------------------------------------------------------------------
+    private SoundPool soundPool;
+    private int crunchSoundId;
+    private int bubblesSoundId;
+
     // prices for hats
     private final Map<Integer, Integer> hatPrices = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // FOR TESTING: Force fresh launch by clearing prefs
+        getSharedPreferences("WalkiesPrefs", MODE_PRIVATE).edit().clear().apply();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tamagotchi);
+
+        // Initialize SoundPool
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(5)
+                .setAudioAttributes(audioAttributes)
+                .build();
+        crunchSoundId = soundPool.load(this, R.raw.crunch_10, 1);
+        bubblesSoundId = soundPool.load(this, R.raw.bubbles, 1);
 
         // Define hat prices
         hatPrices.put(R.drawable.browncowboyhat, 100);
@@ -130,9 +142,9 @@ public class Tamagotchi extends AppCompatActivity
         XPandCoins = findViewById(R.id.statsGroup);
         coins = findViewById(R.id.coins);
         level = findViewById(R.id.level);
-        coinGroup = findViewById(R.id.coinGroup);
+        View coinGroup = findViewById(R.id.coinGroup);
         levelGroup = findViewById(R.id.levelGroup);
-        levelButton = findViewById(R.id.LevelImage);
+        ImageButton levelButton = findViewById(R.id.LevelImage);
         helpButton = findViewById(R.id.helpButton);
         foodHint = findViewById(R.id.foodHint);
         bathHint = findViewById(R.id.bathHint);
@@ -140,7 +152,7 @@ public class Tamagotchi extends AppCompatActivity
         // initialise mvp
         // ------------------------------------------------------------------------
 
-        model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, "city");
+        model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, "placeholder", 0, 0, 0,0,0, "city");
         repository = new TamagotchiRepository(getSharedPreferences("WalkiesPrefs", MODE_PRIVATE));
         ui = new TamagotchiUI(this);
         presenter = new TamagotchiPresenter(this, model, ui, repository);
@@ -152,9 +164,13 @@ public class Tamagotchi extends AppCompatActivity
             model.feed(100);
             model.clean(100);
             model.walk(100);
+            model.coins(200);
             // choose city here ++ other options (eventually)
             model.setCity("Brighton");
             repository.saveCity("Brighton");
+
+            // Show onboarding sequence
+            ui.showWelcomeDialog();
         }else {
             presenter.loadStats();
         }
@@ -272,6 +288,15 @@ public class Tamagotchi extends AppCompatActivity
         handler.removeCallbacks(updateRunnable);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (soundPool != null) {
+            soundPool.release();
+            soundPool = null;
+        }
+    }
+
     // update stats
     // ------------------------------------------------------------------------
     @Override
@@ -368,13 +393,15 @@ public class Tamagotchi extends AppCompatActivity
         tickButton.animate().alpha(1f).setDuration(300).start();
     }
 
-    //dragging minigames
+    // dragging minigames
     // ------------------------------------------------------------------------
 
     @Override
     @SuppressLint("ClickableViewAccessibility")
     public void showSponge() {
         mainMenu.setVisibility(View.GONE);
+        burgerMenu.animate().translationX(burgerMenu.getWidth() + 100).setDuration(300)
+                .withEndAction(() -> burgerMenu.setVisibility(View.GONE));
         cleanProgress = 0;
         draggingSponge.setAlpha(1.0f);
         draggingSponge.setVisibility(View.INVISIBLE);
@@ -394,56 +421,60 @@ public class Tamagotchi extends AppCompatActivity
             draggingSponge.setVisibility(VISIBLE);
         });
 
-        draggingSponge.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN: {
-                        v.performClick();
-                        dX = v.getX() - event.getRawX();
-                        dY = v.getY() - event.getRawY();
-                        break;
-                    }
-                    case MotionEvent.ACTION_MOVE: {
-                        v.setX(event.getRawX() + dX);
-                        v.setY(event.getRawY() + dY);
+        draggingSponge.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN: {
+                    v.performClick();
+                    dX = v.getX() - event.getRawX();
+                    dY = v.getY() - event.getRawY();
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    v.setX(event.getRawX() + dX);
+                    v.setY(event.getRawY() + dY);
 
-                        Rect spongeRect = new Rect();
-                        draggingSponge.getGlobalVisibleRect(spongeRect);
+                    Rect spongeRect = new Rect();
+                    draggingSponge.getGlobalVisibleRect(spongeRect);
 
-                        Rect dogRect = new Rect();
-                        dog.getGlobalVisibleRect(dogRect);
+                    Rect dogRect = new Rect();
+                    dog.getGlobalVisibleRect(dogRect);
 
-                        if (presenter.isSpongeCleaning(spongeRect, dogRect)) {
-                            cleanProgress += 1;
-                            cleanProgress = Math.min(cleanProgress, 225);
+                    if (presenter.isSpongeCleaning(spongeRect, dogRect)) {
+                        cleanProgress += 1;
+                        cleanProgress = Math.min(cleanProgress, 225);
 
-                            if (cleanProgress >= 5 && cleanProgress < 25)
-                                suds.setImageResource(R.drawable.suds1);
-                            else if (cleanProgress >= 25 && cleanProgress < 75)
-                                suds.setImageResource(R.drawable.suds2);
-                            else if (cleanProgress >= 75 && cleanProgress < 150)
-                                suds.setImageResource(R.drawable.suds3);
-                            else if (cleanProgress >= 150)
-                                suds.setImageResource(R.drawable.suds4);
-
-                            suds.setVisibility(View.VISIBLE);
-
-                            if (cleanProgress >= 225) {
-                                presenter.onClean(100);
-                                draggingSponge.setVisibility(View.GONE);
-                                draggingSponge.setOnTouchListener(null);
-                                hideMenus();
+                        if (cleanProgress >= 5 && cleanProgress < 25)
+                            suds.setImageResource(R.drawable.suds1);
+                        else if (cleanProgress >= 25 && cleanProgress < 75)
+                            suds.setImageResource(R.drawable.suds2);
+                        else if (cleanProgress >= 75 && cleanProgress < 150)
+                            suds.setImageResource(R.drawable.suds3);
+                        else if (cleanProgress >= 150) {
+                            if (suds.getVisibility() == View.VISIBLE && cleanProgress < 151) {
+                                presenter.onClean(0);
                             }
+                            if (cleanProgress == 150) {
+                                playBubblesSound();
+                            }
+                            suds.setImageResource(R.drawable.suds4);
                         }
 
-                        break;
+                        suds.setVisibility(View.VISIBLE);
+
+                        if (cleanProgress >= 225) {
+                            presenter.onClean(100);
+                            draggingSponge.setVisibility(View.GONE);
+                            draggingSponge.setOnTouchListener(null);
+                            hideMenus();
+                        }
                     }
-                    default:
-                        return false;
+
+                    break;
                 }
-                return true;
+                default:
+                    return false;
             }
+            return true;
         });
     }
 
@@ -461,14 +492,11 @@ public class Tamagotchi extends AppCompatActivity
             foodHint.setVisibility(VISIBLE);
         }
 
-        draggingFood.post(new Runnable() {
-            @Override
-            public void run() {
-                View mainContainer = findViewById(R.id.main);
-                draggingFood.setX((mainContainer.getWidth() - draggingFood.getWidth()) / 2f);
-                draggingFood.setY(mainContainer.getHeight() - draggingFood.getHeight() - 100);
-                draggingFood.setVisibility(View.VISIBLE);
-            }
+        draggingFood.post(() -> {
+            View mainContainer = findViewById(R.id.main);
+            draggingFood.setX((mainContainer.getWidth() - draggingFood.getWidth()) / 2f);
+            draggingFood.setY(mainContainer.getHeight() - draggingFood.getHeight() - 100);
+            draggingFood.setVisibility(View.VISIBLE);
         });
 
         draggingFood.setOnTouchListener(new View.OnTouchListener() {
@@ -566,6 +594,7 @@ public class Tamagotchi extends AppCompatActivity
             model.setSelectedHat(0);
             brought = true;
             hideMenus();
+            presenter.saveStats();
             return;
         }
 
@@ -575,8 +604,10 @@ public class Tamagotchi extends AppCompatActivity
             model.setSelectedHat(hatID);
             brought = true;
             hideMenus();
+            presenter.saveStats();
         } else {
-            int price = hatPrices.getOrDefault(hatID, 0);
+            Integer priceObj = hatPrices.get(hatID);
+            int price = (priceObj != null) ? priceObj : 0;
             if (model.getCoins() >= price) {
                 model.spendCoins(price);
                 model.addOwnedHat(hatName);
@@ -584,6 +615,7 @@ public class Tamagotchi extends AppCompatActivity
                 brought = true;
                 hideMenus();
                 updateUI();
+                presenter.saveStats();
             } else {
                 cantAfford();
             }
@@ -594,6 +626,7 @@ public class Tamagotchi extends AppCompatActivity
         if (model.getCoins() >= cost){
             model.spendCoins(cost);
             updateUI();
+            presenter.saveStats();
             return false;
         } else {
             cantAfford();
@@ -605,7 +638,7 @@ public class Tamagotchi extends AppCompatActivity
         ui.showCantAffordDialog();
     }
 
-    // level up diaglog
+    // level up dialog
     // ------------------------------------------------------------------------
 
     @Override
@@ -633,11 +666,33 @@ public class Tamagotchi extends AppCompatActivity
     }
 
     @Override
+    public void playEatingSound() {
+        if (soundPool != null && crunchSoundId != 0 && !repository.isMuted()) {
+            soundPool.play(crunchSoundId, 1, 1, 0, 0, 1);
+        }
+    }
+
+    @Override
+    public void playBubblesSound() {
+        if (soundPool != null && bubblesSoundId != 0 && !repository.isMuted()) {
+            soundPool.play(bubblesSoundId, 1, 1, 0, 0, 1);
+        }
+    }
+
+    @Override
     public Context getContext() {
         return this;
     }
 
     public TamagotchiContract.Presenter getPresenter() {
         return presenter;
+    }
+
+    public TamagotchiUI getTamagotchiUI() {
+        return ui;
+    }
+
+    public TamagotchiRepository getRepository() {
+        return repository;
     }
 }

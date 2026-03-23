@@ -35,7 +35,6 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
     public void setUserLocation(String latitude, String longitude) {
         userLocation = createLocation(Double.parseDouble(latitude), Double.parseDouble(longitude));
         setupMocks();
-        presenter.onLocationReceived(userLocation);
     }
 
     private void setupMocks() {
@@ -46,6 +45,7 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
         
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
+        // Clean slate for each test
         context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE).edit().clear().apply();
         
         when(mockView.getContext()).thenReturn(context);
@@ -72,7 +72,7 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
 
     @Then("the app displays a list of walks sorted by distance")
     public void verifySortedWalks() {
-        verify(mockView, atLeastOnce()).showWalks(anyList());
+        verify(mockView, atLeastOnce()).showWalks(any());
     }
 
     @Then("map markers are shown for each walk")
@@ -177,6 +177,10 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
     @When("the map becomes ready")
     public void mapReady() {
         setupMocks();
+        // If location was provided, ensure presenter has it before mapReady logic
+        if (userLocation != null) {
+            presenter.onLocationReceived(userLocation);
+        }
         presenter.onMapReady();
     }
 

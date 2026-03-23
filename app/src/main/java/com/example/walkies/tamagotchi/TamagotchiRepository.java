@@ -10,6 +10,8 @@ public class TamagotchiRepository {
     private static final String KEY_LIFETIME_COINS = "lifetime_coins";
     private static final String KEY_XP = "xp";
     private static final String KEY_LIFETIME_XP = "lifetime_xp";
+    private static final String KEY_MONTHLY_XP = "monthly_xp";
+    private static final String KEY_LAST_MONTH = "last_month";
     private static final String KEY_LEVEL = "level";
     private static final String KEY_LIFETIME_CIRCULAR = "lifetime_circular";
     private static final String KEY_LIFETIME_MYSTERY = "lifetime_mystery";
@@ -23,6 +25,9 @@ public class TamagotchiRepository {
     private static final String KEY_OWNED_HATS = "owned_hats";
     private static final String KEY_SELECTED_HAT = "selected_hat";
     private static final String KEY_CITY = "city";
+    private static final String KEY_USERNAME = "username";
+    private static final String KEY_GOAL = "goal";
+    private static final String KEY_MUTED = "muted";
 
     public TamagotchiRepository(SharedPreferences prefs) {
         this.prefs = prefs;
@@ -36,11 +41,13 @@ public class TamagotchiRepository {
                 .apply();
     }
 
-    public void saveXPandLevel(int xp, int level, int lifetimeXP) {
+    public void saveXPandLevel(int xp, int level, int lifetimeXP, int monthlyXP, String lastMonth) {
         prefs.edit()
                 .putInt(KEY_XP, xp)
                 .putInt(KEY_LEVEL, level)
                 .putInt(KEY_LIFETIME_XP, lifetimeXP)
+                .putInt(KEY_MONTHLY_XP, monthlyXP)
+                .putString(KEY_LAST_MONTH, lastMonth)
                 .apply();
     }
 
@@ -61,12 +68,32 @@ public class TamagotchiRepository {
         return prefs.getString(KEY_CITY, "city");
     }
 
+    public void saveUsername(String username) {
+        prefs.edit()
+                .putString(KEY_USERNAME, username)
+                .apply();
+    }
+
+    public String getUsername() {
+        return prefs.getString(KEY_USERNAME, "");
+    }
+
+    public void saveGoal(String goal) {
+        prefs.edit()
+                .putString(KEY_GOAL, goal)
+                .apply();
+    }
+
+    public String getGoal() {
+        return prefs.getString(KEY_GOAL, "");
+    }
+
     public int getCoins() {
-        return prefs.getInt(KEY_COINS, 0);
+        return prefs.getInt(KEY_COINS, 200);
     }
 
     public int getLifetimeCoins() {
-        return prefs.getInt(KEY_LIFETIME_COINS, 0);
+        return prefs.getInt(KEY_LIFETIME_COINS, 200);
     }
 
     public void saveXP(int xp) {
@@ -81,12 +108,6 @@ public class TamagotchiRepository {
                 .apply();
     }
 
-    public void saveLifetimeXP(int lifetimeXP) {
-        prefs.edit()
-                .putInt(KEY_LIFETIME_XP, lifetimeXP)
-                .apply();
-    }
-
     public int getXP() {
         return prefs.getInt(KEY_XP, 0);
     }
@@ -97,6 +118,14 @@ public class TamagotchiRepository {
 
     public int getLifetimeXP() {
         return prefs.getInt(KEY_LIFETIME_XP, 0);
+    }
+
+    public int getMonthlyXP() {
+        return prefs.getInt(KEY_MONTHLY_XP, 0);
+    }
+
+    public String getLastMonth() {
+        return prefs.getString(KEY_LAST_MONTH, "");
     }
 
     public void saveLifetimeCircular(int circular) {
@@ -184,5 +213,13 @@ public class TamagotchiRepository {
 
     public int getSelectedHat() {
         return prefs.getInt(KEY_SELECTED_HAT, 0);
+    }
+
+    public void saveMuted(boolean muted) {
+        prefs.edit().putBoolean(KEY_MUTED, muted).apply();
+    }
+
+    public boolean isMuted() {
+        return prefs.getBoolean(KEY_MUTED, false);
     }
 }

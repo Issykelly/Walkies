@@ -27,6 +27,15 @@
         android:textAllCaps="false" />
 
     <Button
+        android:id="@+id/btnLeaderboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#4CAF50"
+        android:text="@string/leaderboard"
+        android:textAllCaps="false" />
+
+    <Button
         android:id="@+id/btnSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

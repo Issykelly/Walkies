@@ -13,6 +13,8 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     private int lifetimeCoins;
     private int xp;
     private int lifetimeXP;
+    private int monthlyXP;
+    private String lastMonth;
     private int level;
     private int lifetimeCircular;
     private int lifetimeMystery;
@@ -22,7 +24,7 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     private int selectedHat;
 
 
-    public TamagotchiModel(int hunger, int clean, int walked, int coins, int xp, int level, int lifetimeXP, int lifetimeCoins, int lifetimeCircular, int lifetimeMystery, int lifetimeFed, int lifetimeBathed, String city){
+    public TamagotchiModel(int hunger, int clean, int walked, int coins, int xp, int level, int lifetimeXP, int monthlyXP, String lastMonth, int lifetimeCoins, int lifetimeCircular, int lifetimeMystery, int lifetimeFed, int lifetimeBathed, String city){
         this.hunger = hunger;
         this.clean = clean;
         this.walked = walked;
@@ -32,6 +34,8 @@ public class TamagotchiModel implements TamagotchiContract.Model {
         this.xp = xp;
         this.level = level;
         this.lifetimeXP = lifetimeXP;
+        this.monthlyXP = monthlyXP;
+        this.lastMonth = lastMonth;
         this.lifetimeCircular = lifetimeCircular;
         this.lifetimeMystery = lifetimeMystery;
         this.lifetimeFed = lifetimeFed;
@@ -46,6 +50,8 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     @Override public int getXP(){ return xp; }
     @Override public int getLevel(){ return level; }
     @Override public int getLifetimeXP() { return lifetimeXP; }
+    @Override public int getMonthlyXP() { return monthlyXP; }
+    @Override public String getLastMonth() { return lastMonth; }
     @Override public int getLifetimeCoins() { return lifetimeCoins; }
     @Override public int getLifetimeCircular() { return lifetimeCircular; }
     @Override public int getLifetimeMystery() { return lifetimeMystery; }
@@ -100,6 +106,7 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     public void gainXP(int value){
         xp += value;
         lifetimeXP += value;
+        monthlyXP += value;
     }
 
     @Override
@@ -112,6 +119,16 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     @Override
     public void setLifetimeXP(int value) {
         this.lifetimeXP = value;
+    }
+
+    @Override
+    public void setMonthlyXP(int value) {
+        this.monthlyXP = value;
+    }
+
+    @Override
+    public void setLastMonth(String month) {
+        this.lastMonth = month;
     }
 
     @Override
