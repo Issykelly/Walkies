@@ -21,6 +21,7 @@ public interface CircularWalksContract {
         void showForcedWalkMarker(LatLng pendingForcedWalkDest);
 
         void showHint();
+        void showLocationError();
     }
 
     interface Presenter {
@@ -30,11 +31,14 @@ public interface CircularWalksContract {
         void onRouteRequested(walkModel walk);
         void onResume();
         void onPause();
+        void setForcedWalk(double lat, double lon);
+        void onDestroy();
     }
 
     interface Model {
         void fetchWalks(double lat, double lon, WalksCallback callback);
         void fetchRoute(LatLng origin, LatLng dest, RouteCallback callback);
+        void shutdown();
 
         interface WalksCallback {
             void onLoaded(List<walkModel> walks);

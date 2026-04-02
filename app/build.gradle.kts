@@ -40,17 +40,17 @@ dependencies {
     implementation(libs.recyclerview)
 
     testImplementation(libs.junit)
-    testImplementation("org.mockito:mockito-core:5.5.0")
+    testImplementation(libs.mockito.core)
 
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.green.coffee)
-    androidTestImplementation("org.mockito:mockito-android:5.5.0")
-    androidTestImplementation("io.cucumber:cucumber-android:7.18.1")
-    androidTestImplementation("io.cucumber:cucumber-picocontainer:7.18.1")
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.cucumber.android)
+    androidTestImplementation(libs.cucumber.picocontainer)
 
-    androidTestImplementation("androidx.test:core:1.5.0")
-    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation(libs.test.core)
+    androidTestImplementation(libs.test.runner)
     implementation(platform(libs.com.google.firebase.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)

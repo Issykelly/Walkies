@@ -19,6 +19,8 @@ public interface MysteryWalksContract {
 
         boolean hasLocationPermission();
         void requestLocationPermission();
+
+        void showLocationError();
     }
 
     interface Presenter {
@@ -31,6 +33,7 @@ public interface MysteryWalksContract {
         void permissionResult(boolean granted);
         void resume();
         void pause();
+        void onDestroy();
     }
 
     interface Model {
@@ -43,8 +46,9 @@ public interface MysteryWalksContract {
         void setInitialDistance(int dist);
         void setMaxHint(int hint);
         void reset();
+        void shutdown();
 
-        interface Callback<T>{ void call(T data); }
+        interface Callback<T>{ void call(T data, boolean isFromCache); }
         interface LocationCallback{ void call(android.location.Location loc); }
     }
 }

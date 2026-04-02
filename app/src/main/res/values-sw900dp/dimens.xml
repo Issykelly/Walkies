@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dog_size_width">800dp</dimen>
+    <dimen name="dog_size_height">1333dp</dimen>
+    <dimen name="menu_button_size">140dp</dimen>
+</resources>

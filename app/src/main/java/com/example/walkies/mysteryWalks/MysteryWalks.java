@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -40,6 +41,10 @@ public class MysteryWalks extends AppCompatActivity
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+
+        int orientation = getResources().getInteger(R.integer.app_orientation);
+        setRequestedOrientation(orientation);
+
         setContentView(R.layout.activity_mystery_walks);
 
         presenter = new MysteryWalksPresenter(
@@ -61,7 +66,7 @@ public class MysteryWalks extends AppCompatActivity
         back.setOnClickListener(v -> openTamagotchi());
 
         rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new walksAdapter(this, new ArrayList<>(),
+        adapter = new walksAdapter(new ArrayList<>(),
                 new walksAdapter.OnWalkClickListener() {
                     @Override
                     public void onWalkClick(walkModel w) {}
@@ -82,9 +87,9 @@ public class MysteryWalks extends AppCompatActivity
     }
 
     private void clearIndicators() {
-        dist.setText(R.string.current_distance);
+        dist.setText(R.string.distance_label);
         hintTxt.setText(R.string.hint);
-        hintNum.setText(R.string.hint_1);
+        hintNum.setText(getString(R.string.hint_1, 1));
     }
 
     @Override
@@ -95,7 +100,7 @@ public class MysteryWalks extends AppCompatActivity
     @Override
     public void showHint(String t, int i) {
         hintTxt.setText(t);
-        hintNum.setText(getString(R.string.hint_1).replace("1", String.valueOf(i)));
+        hintNum.setText(getString(R.string.hint_1, i));
     }
 
     @Override
@@ -109,9 +114,9 @@ public class MysteryWalks extends AppCompatActivity
     @Override
     public void showDistance(int m) {
         if (m < 0)
-            dist.setText(R.string.current_distance);
+            dist.setText(R.string.distance_label);
         else
-            dist.setText(getString(R.string.current_distance) + ": " + m + "m");
+            dist.setText(getString(R.string.current_distance, m));
     }
 
     @Override
@@ -185,5 +190,27 @@ public class MysteryWalks extends AppCompatActivity
     @Override protected void onPause() {
         super.onPause();
         presenter.pause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (presenter != null) {
+            presenter.onDestroy();
+        }
+    }
+
+    @Override
+    public void showLocationError() {
+        Log.d("MysteryWalks", "showLocationError called");
+        runOnUiThread(() -> {
+            View overlay = findViewById(R.id.location_error_overlay);
+            if (overlay != null) {
+                overlay.setVisibility(View.VISIBLE);
+                findViewById(R.id.error_ok_button).setOnClickListener(v -> openTamagotchi());
+            } else {
+                Log.e("MysteryWalks", "location_error_overlay not found!");
+            }
+        });
     }
 }

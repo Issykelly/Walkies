@@ -6,28 +6,28 @@ import java.util.Set;
 
 public class TamagotchiRepository {
     private final SharedPreferences prefs;
-    private static final String KEY_COINS = "coins";
-    private static final String KEY_LIFETIME_COINS = "lifetime_coins";
-    private static final String KEY_XP = "xp";
-    private static final String KEY_LIFETIME_XP = "lifetime_xp";
-    private static final String KEY_MONTHLY_XP = "monthly_xp";
-    private static final String KEY_LAST_MONTH = "last_month";
-    private static final String KEY_LEVEL = "level";
-    private static final String KEY_LIFETIME_CIRCULAR = "lifetime_circular";
-    private static final String KEY_LIFETIME_MYSTERY = "lifetime_mystery";
-    private static final String KEY_LIFETIME_FED = "lifetime_fed";
-    private static final String KEY_LIFETIME_BATHED = "lifetime_bathed";
-    private static final String KEY_HUNGER = "hunger";
-    private static final String KEY_CLEAN = "clean";
-    private static final String KEY_WALKED = "walked";
-    private static final String KEY_LAST_SAVE_TIME = "last_save_time";
-    private static final String KEY_FIRST_LAUNCH = "first_launch";
-    private static final String KEY_OWNED_HATS = "owned_hats";
-    private static final String KEY_SELECTED_HAT = "selected_hat";
-    private static final String KEY_CITY = "city";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_GOAL = "goal";
-    private static final String KEY_MUTED = "muted";
+    public static final String KEY_COINS = "coins";
+    public static final String KEY_LIFETIME_COINS = "lifetime_coins";
+    public static final String KEY_XP = "xp";
+    public static final String KEY_LIFETIME_XP = "lifetime_xp";
+    public static final String KEY_MONTHLY_XP = "monthly_xp";
+    public static final String KEY_LAST_MONTH = "last_month";
+    public static final String KEY_LEVEL = "level";
+    public static final String KEY_LIFETIME_CIRCULAR = "lifetime_circular";
+    public static final String KEY_LIFETIME_MYSTERY = "lifetime_mystery";
+    public static final String KEY_LIFETIME_FED = "lifetime_fed";
+    public static final String KEY_LIFETIME_BATHED = "lifetime_bathed";
+    public static final String KEY_HUNGER = "hunger";
+    public static final String KEY_CLEAN = "clean";
+    public static final String KEY_WALKED = "walked";
+    public static final String KEY_LAST_SAVE_TIME = "last_save_time";
+    public static final String KEY_FIRST_LAUNCH = "first_launch";
+    public static final String KEY_OWNED_HATS = "owned_hats";
+    public static final String KEY_SELECTED_HAT = "selected_hat";
+    public static final String KEY_CITY = "city";
+    public static final String KEY_USERNAME = "username";
+    public static final String KEY_GOAL = "goal";
+    public static final String KEY_MUTED = "muted";
 
     public TamagotchiRepository(SharedPreferences prefs) {
         this.prefs = prefs;
@@ -56,6 +56,47 @@ public class TamagotchiRepository {
                 .putInt(KEY_COINS, coins)
                 .putInt(KEY_LIFETIME_COINS, lifetimeCoins)
                 .apply();
+    }
+
+    public void addWalkRewards(int earnedXp, int earnedCoins, boolean isCircular) {
+        int currentXp = getXP();
+        int currentMonthlyXp = getMonthlyXP();
+        int currentLevel = getLevel();
+        int currentLifetimeXp = getLifetimeXP();
+        int currentCoins = getCoins();
+        int currentLifetimeCoins = getLifetimeCoins();
+
+        int newXp = currentXp + earnedXp;
+        int newMonthlyXp = currentMonthlyXp + earnedXp;
+        int newLifetimeXp = currentLifetimeXp + earnedXp;
+        int newCoins = currentCoins + earnedCoins;
+        int newLifetimeCoins = currentLifetimeCoins + earnedCoins;
+
+        int newLevel = currentLevel;
+        while (newXp >= 100 + (newLevel * 10)) {
+            newXp -= (100 + (newLevel * 10));
+            newLevel++;
+            newCoins += 100;
+            newLifetimeCoins += 100;
+        }
+
+        SharedPreferences.Editor editor = prefs.edit()
+                .putInt(KEY_XP, newXp)
+                .putInt(KEY_LEVEL, newLevel)
+                .putInt(KEY_LIFETIME_XP, newLifetimeXp)
+                .putInt(KEY_MONTHLY_XP, newMonthlyXp)
+                .putInt(KEY_COINS, newCoins)
+                .putInt(KEY_LIFETIME_COINS, newLifetimeCoins)
+                .putInt(KEY_WALKED, 100)
+                .putLong(KEY_LAST_SAVE_TIME, System.currentTimeMillis() / 1000);
+
+        if (isCircular) {
+            editor.putInt(KEY_LIFETIME_CIRCULAR, getLifetimeCircular() + 1);
+        } else {
+            editor.putInt(KEY_LIFETIME_MYSTERY, getLifetimeMystery() + 1);
+        }
+        
+        editor.apply();
     }
 
     public void saveCity(String city) {
@@ -94,18 +135,6 @@ public class TamagotchiRepository {
 
     public int getLifetimeCoins() {
         return prefs.getInt(KEY_LIFETIME_COINS, 200);
-    }
-
-    public void saveXP(int xp) {
-        prefs.edit()
-                .putInt(KEY_XP, xp)
-                .apply();
-    }
-
-    public void saveLevel(int level) {
-        prefs.edit()
-                .putInt(KEY_LEVEL, level)
-                .apply();
     }
 
     public int getXP() {

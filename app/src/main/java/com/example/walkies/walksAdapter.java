@@ -1,6 +1,5 @@
 package com.example.walkies;
 
-import android.content.Context;
 import android.view.*;
 import android.widget.*;
 
@@ -11,10 +10,9 @@ import java.util.*;
 
 public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> {
 
-    private final Context context;
     private final OnWalkClickListener listener;
 
-    private List<walkModel> walks = new ArrayList<>();
+    private List<walkModel> walks;
     private int selectedPosition = RecyclerView.NO_POSITION;
 
     public interface OnWalkClickListener {
@@ -22,28 +20,15 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         void onRouteButtonClick(walkModel walk);
     }
 
-    public walksAdapter(Context context, List<walkModel> list, OnWalkClickListener listener) {
-        this.context = context;
+    public walksAdapter(List<walkModel> list, OnWalkClickListener listener) {
         this.walks = new ArrayList<>(list);
         this.listener = listener;
-        setHasStableIds(true);
     }
 
     public void updateData(List<walkModel> newList) {
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(walks, newList));
         walks = new ArrayList<>(newList);
         diff.dispatchUpdatesTo(this);
-    }
-
-    public void setSelectedWalk(walkModel walk) {
-        int newPos = walks.indexOf(walk);
-        if (newPos == -1) return;
-
-        int oldPos = selectedPosition;
-        selectedPosition = newPos;
-
-        if (oldPos != RecyclerView.NO_POSITION) notifyItemChanged(oldPos);
-        notifyItemChanged(newPos);
     }
 
     @NonNull
@@ -60,7 +45,7 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
         walkModel model = walks.get(position);
 
         holder.name.setText(model.getWalkName());
-        holder.distance.setText(String.format(Locale.getDefault(), "%.2f miles", model.getWalkDistance()));
+        holder.distance.setText(holder.itemView.getContext().getString(R.string.miles_format, model.getWalkDistance()));
 
         holder.tick.setVisibility(selectedPosition == position ? View.VISIBLE : View.GONE);
 
@@ -88,20 +73,15 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
     }
 
     @Override
-    public long getItemId(int position) {
-        return walks.get(position).getWalkName().hashCode(); // stable id
-    }
-
-    @Override
     public int getItemCount() {
         return walks.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name, distance;
-        ImageButton tick;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView name, distance;
+        public ImageButton tick;
 
-        ViewHolder(View v) {
+        public ViewHolder(View v) {
             super(v);
             name = v.findViewById(R.id.idWalkName);
             distance = v.findViewById(R.id.idDistance);

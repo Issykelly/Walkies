@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -40,11 +41,9 @@ public class CircularWalksMap extends AppCompatActivity
     private FrameLayout hintContainer;
 
     private FusedLocationProviderClient client;
-    private LocationRequest locationRequest;
     private final LocationCallback locationCallback = new LocationCallback() {
         @Override
-        public void onLocationResult(LocationResult locationResult) {
-            if (locationResult == null) return;
+        public void onLocationResult(@NonNull LocationResult locationResult) {
             for (Location loc : locationResult.getLocations()) {
                 presenter.onLocationReceived(loc);
             }
@@ -54,7 +53,11 @@ public class CircularWalksMap extends AppCompatActivity
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
-        setContentView(R.layout.activity_circular_walks_map);
+
+        int orientation = getResources().getInteger(R.integer.app_orientation);
+        setRequestedOrientation(orientation);
+
+        super.setContentView(R.layout.activity_circular_walks_map);
 
         rv = findViewById(R.id.idRVWalks);
         hintContainer = findViewById(R.id.hint_container);
@@ -69,19 +72,21 @@ public class CircularWalksMap extends AppCompatActivity
             mapFragment.getMapAsync(this);
 
         client = LocationServices.getFusedLocationProviderClient(this);
+        Intent intent = getIntent();
+        if (intent.hasExtra("force_walk_lat") && intent.hasExtra("force_walk_lon")) {
+            double lat = intent.getDoubleExtra("force_walk_lat", 0);
+            double lon = intent.getDoubleExtra("force_walk_lon", 0);
+            presenter.setForcedWalk(lat, lon);
+        }
 
-        // Back button
-        // ---------------------------------------------------------
         ImageButton backBtn = findViewById(R.id.backButton);
         backBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(this, Tamagotchi.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
+            Intent backIntent = new Intent(this, Tamagotchi.class);
+            backIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(backIntent);
             finish();
         });
 
-        // Permissions
-        // ---------------------------------------------------------
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
@@ -93,7 +98,17 @@ public class CircularWalksMap extends AppCompatActivity
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             return;
 
-        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+        try {
+            client.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    presenter.onLocationReceived(location);
+                }
+            });
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
                 .setMinUpdateDistanceMeters(5)
                 .build();
 
@@ -124,6 +139,9 @@ public class CircularWalksMap extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         stopLocationUpdates();
+        if (presenter != null) {
+            presenter.onDestroy();
+        }
     }
 
     @Override
@@ -145,13 +163,10 @@ public class CircularWalksMap extends AppCompatActivity
         presenter.onMapReady();
     }
 
-    // View Methods
-    // ---------------------------------------------------------
-
     @Override
     public void showWalks(List<walkModel> walks) {
         if (adapter == null) {
-            adapter = new walksAdapter(this, new ArrayList<>(walks),
+            adapter = new walksAdapter(new ArrayList<>(walks),
                     new walksAdapter.OnWalkClickListener() {
                         @Override
                         public void onWalkClick(walkModel walk) {
@@ -220,8 +235,10 @@ public class CircularWalksMap extends AppCompatActivity
 
     @Override
     public void toggleWalkList(boolean show) {
-        findViewById(R.id.idRVWalks)
-                .setVisibility(show ? android.view.View.VISIBLE : android.view.View.GONE);
+        rv.setVisibility(show ? android.view.View.VISIBLE : android.view.View.GONE);
+        if (show) {
+            hintContainer.setVisibility(android.view.View.GONE);
+        }
     }
 
     @Override
@@ -231,6 +248,27 @@ public class CircularWalksMap extends AppCompatActivity
 
     @Override
     public void showHint() {
+        rv.setVisibility(android.view.View.GONE);
         hintContainer.setVisibility(android.view.View.VISIBLE);
+        TextView tvHint = findViewById(R.id.hint);
+        if (tvHint != null) {
+            tvHint.setText(R.string.look_around);
+        }
+    }
+
+    @Override
+    public void showLocationError() {
+        runOnUiThread(() -> {
+            android.view.View overlay = findViewById(R.id.location_error_overlay);
+            if (overlay != null) {
+                overlay.setVisibility(android.view.View.VISIBLE);
+                findViewById(R.id.error_ok_button).setOnClickListener(v -> {
+                    Intent backIntent = new Intent(this, Tamagotchi.class);
+                    backIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(backIntent);
+                    finish();
+                });
+            }
+        });
     }
 }

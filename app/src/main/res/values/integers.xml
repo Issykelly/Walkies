@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 1 = SCREEN_ORIENTATION_PORTRAIT, 0 = SCREEN_ORIENTATION_LANDSCAPE -->
+    <integer name="app_orientation">1</integer>
+    <string name="orientation_config">portrait</string>
+</resources>

@@ -11,18 +11,18 @@
         android:id="@+id/settingsDetailsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Settings"
+        android:text="@string/settings"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:textColor="?android:attr/textColorPrimary"
         android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/tvUsernameLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Username:"
-        android:textColor="@android:color/black"
+        android:text="@string/username_label"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="16sp"
         android:layout_gravity="start"/>
 
@@ -30,8 +30,8 @@
         android:id="@+id/tvUsernameValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="username"
-        android:textColor="@android:color/black"
+        android:text="@string/enter_username"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_gravity="start"
@@ -40,8 +40,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Current City:"
-        android:textColor="@android:color/black"
+        android:text="@string/current_city_label"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="16sp"
         android:layout_gravity="start"/>
 
@@ -56,8 +56,8 @@
         android:id="@+id/switchMute"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Mute App"
-        android:textColor="@android:color/black"
+        android:text="@string/mute_app"
+        android:textColor="?android:attr/textColorPrimary"
         android:textSize="16sp"
         android:layout_marginBottom="24dp"/>
 
@@ -66,16 +66,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:backgroundTint="#4CAF50"
-        android:text="Save"
+        android:text="@string/save"
         android:textAllCaps="false" />
 
     <Button
         android:id="@+id/btnBackSettingsDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="#4CAF50"
-        android:text="Back"
+        android:text="@string/back"
         android:textAllCaps="false" />
 
 </LinearLayout>

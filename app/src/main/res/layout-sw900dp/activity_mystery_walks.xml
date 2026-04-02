@@ -10,13 +10,13 @@
 
     <ImageButton
         android:id="@+id/backButton"
-        android:layout_width="65dp"
-        android:layout_height="66dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="40dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="48dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/back_desc"
-        android:padding="12dp"
+        android:padding="20dp"
         android:scaleType="fitCenter"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -43,91 +43,94 @@
         android:id="@+id/distance"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginTop="64dp"
         android:text="@string/current_distance"
         android:textAlignment="center"
         android:textColor="?android:attr/textColorPrimary"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/textView2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.93" />
-
-    <Button
-        android:id="@+id/giveup"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="16dp"
-        android:minHeight="80dp"
-        android:text="@string/give_up"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/hint_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:text="@string/hint_1"
-        android:textColor="?android:attr/textColorPrimary"
         android:textSize="48sp"
-        app:layout_constraintBottom_toTopOf="@+id/giveup"
-        app:layout_constraintEnd_toStartOf="@+id/next" />
-
-    <Button
-        android:id="@+id/next"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        android:layout_marginEnd="36dp"
-        android:text="@string/next"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/giveup"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <Button
-        android:id="@+id/prev"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        android:text="@string/prev"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/giveup"
-        app:layout_constraintEnd_toStartOf="@+id/hint_number"
-        app:layout_constraintHorizontal_bias="0.804"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/look_around"
-        android:textAlignment="center"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/backButton" />
 
     <TextView
+        android:id="@+id/textView2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/look_around"
+        android:textAlignment="center"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="36sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/distance" />
+
+    <TextView
         android:id="@+id/hint_container"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="64dp"
         android:gravity="center"
         android:text="@string/hint"
         android:textAlignment="center"
         android:textColor="#E91E63"
-        android:textSize="34sp"
-        app:layout_constraintBottom_toTopOf="@+id/hint_number"
+        android:textSize="72sp"
+        app:layout_constraintBottom_toTopOf="@+id/prev"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <Button
+        android:id="@+id/prev"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:text="@string/prev"
+        android:textSize="36sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/hint_number"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.6" />
+
+    <TextView
+        android:id="@+id/hint_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="64dp"
+        android:layout_marginEnd="64dp"
+        android:text="@string/hint_1"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="120sp"
+        app:layout_constraintBottom_toBottomOf="@+id/prev"
+        app:layout_constraintEnd_toStartOf="@+id/next"
+        app:layout_constraintStart_toEndOf="@+id/prev"
+        app:layout_constraintTop_toTopOf="@+id/prev" />
+
+    <Button
+        android:id="@+id/next"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:text="@string/next"
+        android:textSize="36sp"
+        app:layout_constraintBottom_toBottomOf="@+id/prev"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/hint_number"
+        app:layout_constraintTop_toTopOf="@+id/prev" />
+
+    <Button
+        android:id="@+id/giveup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="150dp"
+        android:layout_marginEnd="150dp"
+        android:layout_marginBottom="80dp"
+        android:minHeight="120dp"
+        android:text="@string/give_up"
+        android:textSize="40sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/location_error_overlay"
@@ -145,9 +148,9 @@
             android:layout_height="wrap_content"
             android:text="Cannot get location. Please check your GPS settings."
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="32sp"
             android:gravity="center"
-            android:padding="20dp"
+            android:padding="48dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/error_ok_button"
             app:layout_constraintStart_toStartOf="parent"
@@ -159,7 +162,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="OK"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="48dp"
+            android:textSize="32sp"
             app:layout_constraintTop_toBottomOf="@id/error_text"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"

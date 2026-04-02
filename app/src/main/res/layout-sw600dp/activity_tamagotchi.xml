@@ -21,13 +21,13 @@
 
     <ImageButton
         android:id="@+id/backButton"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/back_desc"
-        android:padding="12dp"
+        android:padding="16dp"
         android:scaleType="fitCenter"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -36,13 +36,13 @@
 
     <ImageButton
         android:id="@+id/helpButton"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/help_button"
-        android:padding="12dp"
+        android:padding="16dp"
         android:scaleType="fitCenter"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@+id/backButton"
@@ -51,13 +51,13 @@
 
     <ImageButton
         android:id="@+id/confirmButton"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/confirm"
-        android:padding="12dp"
+        android:padding="16dp"
         android:scaleType="fitCenter"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@+id/helpButton"
@@ -67,36 +67,35 @@
     <ImageButton
         android:id="@+id/burgerMenu"
         style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="90dp"
-        android:layout_height="86dp"
+        android:layout_width="110dp"
+        android:layout_height="106dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="24dp"
         android:background="@drawable/rounded_button_border"
         android:contentDescription="@string/burger_desc"
-        android:padding="12dp"
+        android:padding="16dp"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.95"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.019"
         app:srcCompat="@drawable/burger" />
 
     <LinearLayout
         android:id="@+id/mainMenu"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="64dp"
+        android:layout_marginEnd="32dp"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -115,14 +114,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/feed"
                 android:textColor="@android:color/black"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -140,14 +139,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/bathe"
                 android:textColor="@android:color/black"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -165,7 +164,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/walk"
                 android:textColor="@android:color/black"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -189,7 +188,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/dress"
                 android:textColor="@android:color/black"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -197,21 +196,22 @@
 
     <LinearLayout
         android:id="@+id/foodMenu"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="64dp"
+        android:layout_marginEnd="32dp"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8">
 
         <LinearLayout
             android:id="@+id/sock_10_10"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -230,7 +230,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/sock"
                 android:textColor="@android:color/black"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -238,7 +238,7 @@
             android:id="@+id/broccoli_20_25"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -257,7 +257,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/broccoli"
                 android:textColor="@android:color/black"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -265,7 +265,7 @@
             android:id="@+id/cheese_35_50"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="16dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -284,7 +284,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/cheese"
                 android:textColor="@android:color/black"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -292,7 +292,6 @@
             android:id="@+id/meat_50_100"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
             android:gravity="center"
             android:orientation="vertical">
 
@@ -311,35 +310,36 @@
                 android:layout_height="wrap_content"
                 android:text="@string/meat"
                 android:textColor="@android:color/black"
-                android:textSize="16sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
     </LinearLayout>
 
-    <HorizontalScrollView
+    <ScrollView
         android:id="@+id/hatMenu"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="64dp"
+        android:layout_marginEnd="32dp"
         android:scrollbars="none"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:orientation="vertical"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
@@ -357,14 +357,14 @@
                     android:layout_height="wrap_content"
                     android:text="@string/none"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
@@ -382,7 +382,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/brown"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -392,14 +392,14 @@
                     android:gravity="center"
                     android:text="@string/cost_100c"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
@@ -417,7 +417,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/pink"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -427,14 +427,14 @@
                     android:gravity="center"
                     android:text="@string/cost_100c"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="16dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
@@ -452,7 +452,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/green"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -462,14 +462,13 @@
                     android:gravity="center"
                     android:text="@string/cost_75c"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:gravity="center"
                 android:orientation="vertical">
 
@@ -487,7 +486,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/pink"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -497,31 +496,32 @@
                     android:gravity="center"
                     android:text="@string/cost_75c"
                     android:textColor="@android:color/black"
-                    android:textSize="14sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
-    </HorizontalScrollView>
+    </ScrollView>
 
     <ImageView
         android:id="@+id/Dog"
         android:layout_width="@dimen/dog_size_width"
         android:layout_height="@dimen/dog_size_height"
         android:contentDescription="@string/dog_description"
+        android:translationY="150dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.489"
+        app:layout_constraintHorizontal_bias="0.6"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.807"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/husky_idle"
         tools:ignore="VisualLintBounds" />
 
     <ImageView
         android:id="@+id/draggingFood"
-        android:layout_width="138dp"
-        android:layout_height="129dp"
+        android:layout_width="160dp"
+        android:layout_height="150dp"
         android:contentDescription="@string/food_minigame_desc"
         android:elevation="10dp"
         android:visibility="gone"
@@ -532,8 +532,8 @@
 
     <ImageView
         android:id="@+id/draggingSponge"
-        android:layout_width="138dp"
-        android:layout_height="129dp"
+        android:layout_width="160dp"
+        android:layout_height="150dp"
         android:contentDescription="@string/sponge_minigame_desc"
         android:elevation="10dp"
         android:visibility="gone"
@@ -545,39 +545,42 @@
 
     <ImageView
         android:id="@+id/suds"
-        android:layout_width="307dp"
-        android:layout_height="437dp"
+        android:layout_width="400dp"
+        android:layout_height="550dp"
         android:contentDescription="@string/suds_desc"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/background"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/burgerMenu"
-        app:layout_constraintVertical_bias="0.83"
-        app:srcCompat="@drawable/suds4" />
-
-    <ImageView
-        android:id="@+id/accessories"
-        android:layout_width="@dimen/accessory_width"
-        android:layout_height="@dimen/accessory_height"
-        android:contentDescription="@string/accessory_desc"
-        android:visibility="gone"
-        android:translationY="@dimen/accessory_translation_y"
+        android:translationY="-50dp"
         app:layout_constraintBottom_toBottomOf="@+id/Dog"
         app:layout_constraintEnd_toEndOf="@+id/Dog"
         app:layout_constraintStart_toStartOf="@+id/Dog"
         app:layout_constraintTop_toTopOf="@+id/Dog"
-        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/suds4" />
+
+    <ImageView
+        android:id="@+id/accessories"
+        android:layout_width="450dp"
+        android:layout_height="900dp"
+        android:contentDescription="@string/accessory_desc"
+        android:translationX="-25dp"
+        android:translationY="40dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/Dog"
+        app:layout_constraintEnd_toEndOf="@+id/Dog"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/Dog"
+        app:layout_constraintTop_toTopOf="@+id/Dog"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/browncowboyhat" />
 
     <LinearLayout
         android:id="@+id/statsGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
         android:visibility="visible"
         app:layout_constraintStart_toEndOf="@+id/confirmButton"
         app:layout_constraintTop_toTopOf="parent">
@@ -586,14 +589,13 @@
             android:id="@+id/levelGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <ImageButton
                 android:id="@+id/LevelImage"
-                android:layout_width="56dp"
-                android:layout_height="66dp"
-                android:layout_marginStart="16dp"
+                android:layout_width="110dp"
+                android:layout_height="125dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/level_desc"
                 android:scaleType="centerCrop"
@@ -601,11 +603,12 @@
 
             <TextView
                 android:id="@+id/level"
-                android:layout_width="41dp"
-                android:layout_height="61dp"
+                android:layout_width="80dp"
+                android:layout_height="100dp"
                 android:gravity="center"
                 android:textColor="@android:color/black"
-                android:textSize="24sp"
+                android:textSize="48sp"
+                android:textStyle="bold"
                 tools:text="1" />
         </LinearLayout>
 
@@ -613,51 +616,62 @@
             android:id="@+id/coinGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/coinsImage"
-                android:layout_width="67dp"
-                android:layout_height="68dp"
-                android:layout_marginStart="32dp"
+                android:layout_width="125dp"
+                android:layout_height="125dp"
+                android:layout_marginStart="24dp"
                 android:contentDescription="@string/coins_desc"
                 android:src="@drawable/coin" />
 
             <TextView
                 android:id="@+id/coins"
-                android:layout_width="63dp"
-                android:layout_height="61dp"
-                android:layout_marginStart="1dp"
+                android:layout_width="150dp"
+                android:layout_height="100dp"
+                android:layout_marginStart="4dp"
                 android:gravity="center"
                 android:textColor="@android:color/black"
-                android:textSize="24sp"
+                android:textSize="48sp"
+                android:textStyle="bold"
                 tools:text="200" />
         </LinearLayout>
     </LinearLayout>
 
     <TextView
         android:id="@+id/foodHint"
-        android:layout_width="304dp"
-        android:layout_height="98dp"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/food_hint"
         android:textColor="@android:color/black"
-        android:textSize="24sp"
+        android:textSize="32sp"
+        android:translationY="80dp"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/Dog"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.826"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/Dog" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <TextView
         android:id="@+id/bathHint"
-        android:layout_width="304dp"
-        android:layout_height="98dp"
+        android:layout_width="400dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/bath_hint"
         android:textColor="@android:color/black"
-        android:textSize="24sp"
+        android:textSize="32sp"
+        android:translationY="80dp"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/Dog"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.755"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/Dog" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.967" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

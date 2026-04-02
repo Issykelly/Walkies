@@ -1,6 +1,8 @@
 package com.example.walkies.mysteryWalks;
 
 import android.location.Location;
+import android.os.Handler;
+import android.os.Looper;
 import com.example.walkies.walkModel;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +23,19 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
     private TrackingMode trackingMode = TrackingMode.NONE;
 
     private List<walkModel> walkList = new ArrayList<>();
+    private Location lastLocation;
+
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private final Runnable locationTimeoutRunnable;
 
     public MysteryWalksPresenter(MysteryWalksContract.View view, MysteryWalksContract.Model model) {
         this.view = view;
         this.model = model;
+        this.locationTimeoutRunnable = () -> {
+            if (lastLocation == null) {
+                this.view.showLocationError();
+            }
+        };
     }
 
     @Override
@@ -40,7 +51,14 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
         view.showWalkList(true);
         view.showDistance(-1);
 
-        model.loadWalks(walks -> {
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+        timeoutHandler.postDelayed(locationTimeoutRunnable, 8000);
+
+        model.loadWalks((walks, isFromCache) -> {
+            if (isFromCache) {
+                view.showMessage("Offline: Showing cached walks.");
+            }
+
             List<walkModel> loaded = new ArrayList<>();
             if (walks != null) {
                 for (walkModel w : walks) {
@@ -54,7 +72,12 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
                 }
             }
             walkList = loaded;
-            view.showWalks(new ArrayList<>(walkList));
+            
+            if (lastLocation != null) {
+                updateWalkDistances(lastLocation);
+            } else {
+                view.showWalks(new ArrayList<>(walkList));
+            }
 
             if (view.hasLocationPermission()) {
                 startLocationUpdates();
@@ -66,8 +89,12 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
 
     private void startLocationUpdates() {
         model.getLastLocation(location -> {
-            if (location != null && active == null) {
-                updateWalkDistances(location);
+            if (location != null) {
+                lastLocation = location;
+                timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+                if (active == null) {
+                    updateWalkDistances(location);
+                }
             }
         });
 
@@ -75,8 +102,12 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
             if (trackingMode != TrackingMode.LIST) {
                 model.stopTracking();
                 model.startTracking(loc -> {
-                    if (loc != null && active == null) {
-                        updateWalkDistances(loc);
+                    if (loc != null) {
+                        lastLocation = loc;
+                        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+                        if (active == null) {
+                            updateWalkDistances(loc);
+                        }
                     }
                 });
                 trackingMode = TrackingMode.LIST;
@@ -141,12 +172,15 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
 
         view.showDistance(-1);
 
-        // Update active walk distance immediately
         model.getLastLocation(loc -> {
-            if (loc != null && active != null) {
-                int d = dist(loc);
-                view.showDistance(d);
-                model.setInitialDistance(d);
+            if (loc != null) {
+                lastLocation = loc;
+                timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+                if (active != null) {
+                    int d = dist(loc);
+                    view.showDistance(d);
+                    model.setInitialDistance(d);
+                }
             }
         });
 
@@ -162,7 +196,12 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
     }
 
     private void location(Location l) {
-        if (l == null || active == null || reached) return;
+        if (l == null) return;
+        
+        lastLocation = l;
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+        
+        if (active == null || reached) return;
 
         int d = dist(l);
         view.showDistance(d);
@@ -233,5 +272,13 @@ public class MysteryWalksPresenter implements MysteryWalksContract.Presenter {
     public void pause() {
         model.stopTracking();
         trackingMode = TrackingMode.NONE;
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+    }
+
+    @Override
+    public void onDestroy() {
+        model.stopTracking();
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+        model.shutdown();
     }
 }

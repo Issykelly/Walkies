@@ -2,24 +2,33 @@ package com.example.walkies.tamagotchi;
 
 import static android.view.View.VISIBLE;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.graphics.drawable.ClipDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.example.walkies.R;
 
@@ -29,82 +38,63 @@ import java.util.Map;
 public class Tamagotchi extends AppCompatActivity
         implements TamagotchiContract.View {
 
-    // model view presenter classes
-    // ------------------------------------------------------------------------
+    private static final String PREFS_NAME = "WalkiesPrefs";
+    private static final String CHANNEL_ID = "hungry_dog_channel";
+
     private TamagotchiPresenter presenter;
     private TamagotchiModel model;
     private TamagotchiRepository repository;
     private TamagotchiUI ui;
     private Runnable updateRunnable;
     private final Handler handler = new Handler(Looper.getMainLooper());
-
-    // views from activity
-    // ------------------------------------------------------------------------
+    
     public ImageView dog;
     private ImageView accessories;
     private ImageView suds;
     private TextView coins;
     private TextView level;
-
-    // stats buttons
-    // ------------------------------------------------------------------------
     private ImageButton feedButton;
     private ImageButton batheButton;
     private ImageButton walkButton;
     private ImageButton helpButton;
 
-    // navigation
-    // ------------------------------------------------------------------------
     private ImageButton burgerMenu;
     private ImageButton backButton;
     private ImageButton tickButton;
 
-    // menu containers
-    // ------------------------------------------------------------------------
     private View mainMenu;
     private View foodMenu;
-    private HorizontalScrollView hatMenu;
+    private View hatMenu;
     private View XPandCoins;
     private View levelGroup;
 
-    // for interactivity mini games
-    // ------------------------------------------------------------------------
     private ImageView draggingFood;
     private ImageView draggingSponge;
     private float dX, dY;
 
-    // hints
-    // ------------------------------------------------------------------------
     private TextView foodHint;
     private TextView bathHint;
 
-    // flags
-    // ------------------------------------------------------------------------
     private boolean brought = false;
 
-    // progress
-    // ------------------------------------------------------------------------
     private int cleanProgress = 0;
     private int hatRes = 0;
 
-    // sound effects
-    // ------------------------------------------------------------------------
     private SoundPool soundPool;
     private int crunchSoundId;
     private int bubblesSoundId;
 
-    // prices for hats
     private final Map<Integer, Integer> hatPrices = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // FOR TESTING: Force fresh launch by clearing prefs
-        getSharedPreferences("WalkiesPrefs", MODE_PRIVATE).edit().clear().apply();
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_tamagotchi);
+        super.setContentView(R.layout.activity_tamagotchi);
 
-        // Initialize SoundPool
+        createNotificationChannel();
+        requestNotificationPermission();
+
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -116,14 +106,11 @@ public class Tamagotchi extends AppCompatActivity
         crunchSoundId = soundPool.load(this, R.raw.crunch_10, 1);
         bubblesSoundId = soundPool.load(this, R.raw.bubbles, 1);
 
-        // Define hat prices
         hatPrices.put(R.drawable.browncowboyhat, 100);
         hatPrices.put(R.drawable.pinkcowboyhat, 100);
         hatPrices.put(R.drawable.partyhatgreen, 75);
         hatPrices.put(R.drawable.partyhatpink, 75);
 
-        // define activity elements
-        // ------------------------------------------------------------------------
         feedButton = findViewById(R.id.feed);
         batheButton = findViewById(R.id.bathe);
         walkButton = findViewById(R.id.walk);
@@ -142,54 +129,45 @@ public class Tamagotchi extends AppCompatActivity
         XPandCoins = findViewById(R.id.statsGroup);
         coins = findViewById(R.id.coins);
         level = findViewById(R.id.level);
-        View coinGroup = findViewById(R.id.coinGroup);
         levelGroup = findViewById(R.id.levelGroup);
         ImageButton levelButton = findViewById(R.id.LevelImage);
         helpButton = findViewById(R.id.helpButton);
         foodHint = findViewById(R.id.foodHint);
         bathHint = findViewById(R.id.bathHint);
 
-        // initialise mvp
-        // ------------------------------------------------------------------------
-
-        model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, "placeholder", 0, 0, 0,0,0, "city");
-        repository = new TamagotchiRepository(getSharedPreferences("WalkiesPrefs", MODE_PRIVATE));
+        model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, getString(R.string.walk_name), 0, 0, 0,0,0, "city");
+        repository = new TamagotchiRepository(getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
         ui = new TamagotchiUI(this);
-        presenter = new TamagotchiPresenter(this, model, ui, repository);
+        presenter = new TamagotchiPresenter(this, model, ui, repository, this);
 
-        // is this the first launch? are we fetching saved stats or creating new ones?
-        // ------------------------------------------------------------------------
+        if (repository.getUsername().isEmpty()) {
+            if (repository.IsFirstLaunch()) {
+                model.feed(100);
+                model.clean(100);
+                model.walk(100);
+                model.coins(200);
 
-        if (repository.IsFirstLaunch()){
-            model.feed(100);
-            model.clean(100);
-            model.walk(100);
-            model.coins(200);
-            // choose city here ++ other options (eventually)
-            model.setCity("Brighton");
-            repository.saveCity("Brighton");
+                String defaultCity = getString(R.string.default_city);
+                model.setCity(defaultCity);
+                repository.saveCity(defaultCity);
+            } else {
+                presenter.loadStats();
+            }
 
-            // Show onboarding sequence
             ui.showWelcomeDialog();
-        }else {
+        } else {
             presenter.loadStats();
         }
 
-        // Restore selected hat
         int selectedHat = model.getSelectedHat();
         if (selectedHat != 0) {
             accessories.setImageResource(selectedHat);
             accessories.setVisibility(VISIBLE);
         }
 
-        // add coins and level
-        // ------------------------------------------------------------------------
+        coins.setText(getString(R.string.number_format, repository.getCoins()));
+        level.setText(getString(R.string.number_format, repository.getLevel()));
 
-        coins.setText(String.valueOf(repository.getCoins()));
-        level.setText(String.valueOf(repository.getLevel()));
-
-        // on click listeners
-        // ------------------------------------------------------------------------
         feedButton.setOnClickListener(v -> presenter.onFeedClicked());
         batheButton.setOnClickListener(v -> presenter.onCleanClicked());
         hatButton.setOnClickListener(v -> presenter.onHatClicked());
@@ -206,8 +184,6 @@ public class Tamagotchi extends AppCompatActivity
             }
         });
 
-        // food menu
-        // ------------------------------------------------------------------------
         View.OnClickListener foodClickListener = v -> {
             int drawableRes = 0;
             int hungerValue = 0;
@@ -239,8 +215,6 @@ public class Tamagotchi extends AppCompatActivity
         findViewById(R.id.cheese).setOnClickListener(foodClickListener);
         findViewById(R.id.meat).setOnClickListener(foodClickListener);
 
-        // hat menu
-        // ------------------------------------------------------------------------
         View.OnClickListener hatClickListener = v -> {
             if (v.getId() == R.id.brownCowboy) hatRes = R.drawable.browncowboyhat;
             else if (v.getId() == R.id.pinkCowboy) hatRes = R.drawable.pinkcowboyhat;
@@ -271,12 +245,30 @@ public class Tamagotchi extends AppCompatActivity
         };
     }
 
-    // on pause / resume implementation
-    // ------------------------------------------------------------------------
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Hungry Dog Channel";
+            String description = "Notifications for when your dog is hungry";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
+        cancelHungryNotification();
         presenter.attach();
         handler.post(updateRunnable);
     }
@@ -284,6 +276,7 @@ public class Tamagotchi extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
+        scheduleHungryNotification(model.getHunger());
         presenter.saveStats();
         handler.removeCallbacks(updateRunnable);
     }
@@ -297,8 +290,6 @@ public class Tamagotchi extends AppCompatActivity
         }
     }
 
-    // update stats
-    // ------------------------------------------------------------------------
     @Override
     public void updateHunger(int value) {
         updateButton(feedButton, value);
@@ -314,9 +305,6 @@ public class Tamagotchi extends AppCompatActivity
         updateButton(walkButton, value);
     }
 
-    // update dog state
-    // ------------------------------------------------------------------------
-
     @Override
     public void showDogState(int drawable) {
         dog.setImageResource(drawable);
@@ -331,9 +319,6 @@ public class Tamagotchi extends AppCompatActivity
         }
     }
 
-    // updates buttons
-    // ------------------------------------------------------------------------
-
     private void updateButton(ImageButton btn, int val) {
         LayerDrawable bg = (LayerDrawable) btn.getBackground();
         ClipDrawable fill = (ClipDrawable) bg.findDrawableByLayerId(R.id.button_fill);
@@ -341,12 +326,9 @@ public class Tamagotchi extends AppCompatActivity
     }
 
     public void updateUI(){
-        coins.setText(String.valueOf(model.getCoins()));
-        level.setText(String.valueOf(model.getLevel()));
+        coins.setText(getString(R.string.number_format, model.getCoins()));
+        level.setText(getString(R.string.number_format, model.getLevel()));
     }
-
-    // menu maintainers
-    // ------------------------------------------------------------------------
 
     public void showBackButton(boolean c, boolean h) {
         backButton.setVisibility(VISIBLE);
@@ -364,9 +346,11 @@ public class Tamagotchi extends AppCompatActivity
 
     public void showXPandCoins(){
         XPandCoins.setVisibility(VISIBLE);
+        levelGroup.setVisibility(VISIBLE);
         XPandCoins.setAlpha(0f);
         XPandCoins.animate().alpha(1f).setDuration(300).start();
         backButton.setVisibility(View.GONE);
+        XPandCoins.animate().translationY(0).setDuration(300).start();
     }
     @Override
     public void showFoodMenu() {
@@ -377,6 +361,10 @@ public class Tamagotchi extends AppCompatActivity
         foodMenu.setTranslationY(500);
         foodMenu.animate().translationY(0).setDuration(300).start();
         showBackButton(true, false);
+        
+        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) {
+            XPandCoins.animate().translationY(0).setDuration(300).start();
+        }
     }
 
     @Override
@@ -391,10 +379,11 @@ public class Tamagotchi extends AppCompatActivity
         tickButton.setVisibility(VISIBLE);
         tickButton.setAlpha(0f);
         tickButton.animate().alpha(1f).setDuration(300).start();
-    }
 
-    // dragging minigames
-    // ------------------------------------------------------------------------
+        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) {
+            XPandCoins.animate().translationY(0).setDuration(300).start();
+        }
+    }
 
     @Override
     @SuppressLint("ClickableViewAccessibility")
@@ -478,8 +467,6 @@ public class Tamagotchi extends AppCompatActivity
         });
     }
 
-    // food minigame
-    // ------------------------------------------------------------------------
     @SuppressLint("ClickableViewAccessibility")
     private void spawnFoodForDragging(int drawableRes, int hungerValue) {
         draggingFood.setImageResource(drawableRes);
@@ -538,8 +525,6 @@ public class Tamagotchi extends AppCompatActivity
             }
         });
     }
-    // hide menus
-    // ------------------------------------------------------------------------
 
     @Override
     public void hideMenus() {
@@ -587,8 +572,6 @@ public class Tamagotchi extends AppCompatActivity
         bathHint.setVisibility(View.GONE);
     }
 
-    // did the user buy the hat?
-    // ------------------------------------------------------------------------
     private void buyHat(int hatID) {
         if (hatID == 0) {
             model.setSelectedHat(0);
@@ -638,27 +621,29 @@ public class Tamagotchi extends AppCompatActivity
         ui.showCantAffordDialog();
     }
 
-    // level up dialog
-    // ------------------------------------------------------------------------
-
-    @Override
-    public void showLevelUpPopup(int newLevel) {
-        ui.showLevelUpDialog(newLevel);
-    }
-
-    // animation
-    // ------------------------------------------------------------------------
-
     @Override
     public void tailWagAnimation() {
         Object tag = dog.getTag();
         int baseId = (tag instanceof Integer) ? (int) tag : R.drawable.husky_idle;
-        String baseName = getResources().getResourceEntryName(baseId);
 
-        int wag1 = getResources().getIdentifier(baseName + "2", "drawable", getPackageName());
-        int wag2 = getResources().getIdentifier(baseName + "3", "drawable", getPackageName());
-        int wag3 = getResources().getIdentifier(baseName + "2", "drawable", getPackageName());
-        int wag4 = getResources().getIdentifier(baseName, "drawable", getPackageName());
+        int wag1, wag2, wag3, wag4;
+
+        if (baseId == R.drawable.husky_estatic) {
+            wag1 = R.drawable.husky_estatic2;
+            wag2 = R.drawable.husky_estatic3;
+            wag3 = R.drawable.husky_estatic2;
+            wag4 = R.drawable.husky_estatic;
+        } else if (baseId == R.drawable.husky_happy) {
+            wag1 = R.drawable.husky_happy2;
+            wag2 = R.drawable.husky_happy3;
+            wag3 = R.drawable.husky_happy2;
+            wag4 = R.drawable.husky_happy;
+        } else {
+            wag1 = R.drawable.husky_idle2;
+            wag2 = R.drawable.husky_idle3;
+            wag3 = R.drawable.husky_idle2;
+            wag4 = R.drawable.husky_idle;
+        }
 
         int[] wagFrames = { wag1, wag2, wag3, wag4 };
 
@@ -676,6 +661,44 @@ public class Tamagotchi extends AppCompatActivity
     public void playBubblesSound() {
         if (soundPool != null && bubblesSoundId != 0 && !repository.isMuted()) {
             soundPool.play(bubblesSoundId, 1, 1, 0, 0, 1);
+        }
+    }
+
+    @Override
+    public void scheduleHungryNotification(int hunger) {
+        if (hunger <= 0) return;
+
+        long timeUntilEmptySeconds = (long) hunger * 360;
+        long triggerAtMillis = System.currentTimeMillis() + (timeUntilEmptySeconds * 1000);
+
+        Intent intent = new Intent(this, HungryReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            }
+        }
+    }
+
+    @Override
+    public void cancelHungryNotification() {
+        Intent intent = new Intent(this, HungryReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+        }
+        
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(1);
         }
     }
 

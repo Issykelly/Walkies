@@ -1,19 +1,27 @@
 package com.example.walkies.tamagotchi;
 
+import android.content.Context;
 import android.graphics.Rect;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.example.walkies.R;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Source;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -30,6 +38,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     private final TamagotchiContract.Model model;
     private final TamagotchiUI ui;
     private final TamagotchiRepository repository;
+    private final Context context;
 
     private ZonedDateTime cachedSunrise;
     private ZonedDateTime cachedSunset;
@@ -38,22 +47,30 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
     public TamagotchiPresenter(TamagotchiContract.View view,
                                TamagotchiContract.Model model,
                                TamagotchiUI ui,
-                               TamagotchiRepository repository){
+                               TamagotchiRepository repository,
+                               Context context){
         this.view = view;
         this.model = model;
         this.ui = ui;
         this.repository = repository;
+        this.context = context;
     }
 
     @Override
     public void attach() {
         loadStats();
-        // pre-fetch sunset time to avoid delay when clicking walk
-        new Thread(() -> fetchSunsetTime(model.getCity())).start();
+        if (isOnline()) {
+            new Thread(() -> fetchSunsetTime(model.getCity())).start();
+        }
     }
 
-    @Override
-    public void detach() { }
+    private boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(cm.getActiveNetwork());
+        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || 
+                                      capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
+    }
 
     @Override
     public void loadStats() {
@@ -66,8 +83,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         model.xp(repository.getXP());
         model.level(repository.getLevel());
         model.setLifetimeXP(repository.getLifetimeXP());
-        
-        // handle monthly reset
+
         String currentMonth = new SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(new Date());
         if (!currentMonth.equals(repository.getLastMonth())) {
             model.setMonthlyXP(0);
@@ -111,7 +127,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
     private void updateFirestoreStats() {
         String username = repository.getUsername().toLowerCase();
-        if (username != null && !username.isEmpty()) {
+        if (!username.isEmpty()) {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             Map<String, Object> updates = new HashMap<>();
             updates.put("lifetimeXP", model.getLifetimeXP());
@@ -161,6 +177,11 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             }
         }
 
+        if (!isOnline()) {
+            ui.showWalkOptions();
+            return;
+        }
+
         new Thread(() -> {
             boolean isNight = fetchSunsetTime(model.getCity());
             Log.d("isNight", String.valueOf(isNight));
@@ -189,7 +210,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
 
             DocumentSnapshot doc = Tasks.await(
-                    db.collection("Cities").document(city).get()
+                    db.collection("Cities").document(city).get(Source.DEFAULT)
             );
 
             if (!doc.exists()) {
@@ -207,20 +228,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             double lng = geo.getLongitude();
             Log.d("SunCheck", "City coordinates: lat=" + lat + ", lng=" + lng);
 
-            // call sunrise-sunset API
-            URL url = new URL(
-                    "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng + "&formatted=0"
-            );
-
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
-            reader.close();
-
-            JSONObject json = new JSONObject(sb.toString());
-            JSONObject results = json.getJSONObject("results");
+            JSONObject results = getJsonObject(lat, lng);
 
             String sunriseStr = results.getString("sunrise");
             String sunsetStr = results.getString("sunset");
@@ -231,7 +239,6 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             ZonedDateTime sunriseLocal = sunriseUtc.withZoneSameInstant(now.getZone());
             ZonedDateTime sunsetLocal = sunsetUtc.withZoneSameInstant(now.getZone());
 
-            // Cache the results
             cachedSunrise = sunriseLocal;
             cachedSunset = sunsetLocal;
             cachedCity = city;
@@ -248,6 +255,23 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             Log.e("SunCheck", "Error fetching sunset/sunrise", e);
             return false;
         }
+    }
+
+    @NonNull
+    private static JSONObject getJsonObject(double lat, double lng) throws IOException, JSONException {
+        URL url = new URL(
+                "https://api.sunrise-sunset.org/json?lat=" + lat + "&lng=" + lng + "&formatted=0"
+        );
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) sb.append(line);
+        reader.close();
+
+        JSONObject json = new JSONObject(sb.toString());
+        return json.getJSONObject("results");
     }
 
     @Override
@@ -298,6 +322,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
         view.updateHunger(model.getHunger());
         view.updateClean(model.getClean());
         view.updateWalk(model.getWalked());
+
         boolean leveledUp = model.checkXPLevels();
         view.updateUI();
         if (leveledUp) {
@@ -331,16 +356,6 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
 
     public void onCleanClicked() {
         view.showSponge();
-    }
-
-    public boolean isFoodFed(Rect foodRect, Rect dogRect) {
-        Rect headRect = new Rect(
-                dogRect.left + (int)(dogRect.width()*0.25),
-                dogRect.top + (int)(dogRect.height()*0.45),
-                dogRect.right - (int)(dogRect.width()*0.25),
-                dogRect.top + (int)(dogRect.height()*0.55)
-        );
-        return Rect.intersects(foodRect, headRect);
     }
 
     public boolean isSpongeCleaning(Rect spongeRect, Rect dogRect) {

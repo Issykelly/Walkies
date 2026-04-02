@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="dialog_width_percent" format="float" type="dimen">0.85</item>
+    <dimen name="menu_button_size">78dp</dimen>
+    <dimen name="dog_size_width">364dp</dimen>
+    <dimen name="dog_size_height">600dp</dimen>
+    <dimen name="dog_translation_y">0dp</dimen>
+    <dimen name="accessory_width">326dp</dimen>
+    <dimen name="accessory_height">751dp</dimen>
+    <dimen name="accessory_translation_y">-180dp</dimen>
+</resources>

@@ -8,23 +8,24 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.example.walkies.tamagotchi.Tamagotchi;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private final CircularWalksContract.View view;
     protected CircularWalksContract.Model model;
-
-    // Walk state
-    // ---------------------------------------------------------
+    private final TamagotchiRepository repository;
     private walkModel activeWalk;
     private LatLng startPoint;
     private Location lastLocation;
-    private Location previousLocation;
 
     private final List<LatLng> fullRoutePoints = new ArrayList<>();
 
@@ -38,45 +39,47 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private LatLng pendingCameraTarget = null;
     private float pendingCameraZoom = 12f;
-
-    // movement thresholds
-    // ---------------------------------------------------------
     private static final float PROGRESS_THRESHOLD = 15f;
     private static final float ARRIVAL_THRESHOLD = 40f;
     private static final float OFF_ROUTE_THRESHOLD = 25f;
-
-    // route recalculation cooldown
-    // ---------------------------------------------------------
     private static final long RECALC_COOLDOWN_MS = 15000;
     private long lastRecalcTime = 0;
     private boolean isRecalculating = false;
-
-    // loop
-    // ---------------------------------------------------------
     private final Handler routeHandler = new Handler(Looper.getMainLooper());
     private boolean loopRunning = false;
+    private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
+    private final Runnable locationTimeoutRunnable;
 
     public CircularWalksPresenter(CircularWalksContract.View v) {
         this(v, new CircularWalksModel(v.getContext()));
     }
 
     public CircularWalksPresenter(CircularWalksContract.View v, CircularWalksContract.Model m) {
-        view = v;
-        model = m;
+        this.view = v;
+        this.model = m;
+        this.repository = new TamagotchiRepository(v.getContext().getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
+        this.locationTimeoutRunnable = () -> {
+            if (lastLocation == null) {
+                view.showLocationError();
+            }
+        };
     }
-
-    // Map Ready
-    // ---------------------------------------------------------
     @Override
     public void onMapReady() {
         mapReady = true;
 
         if (isForcedWalk && activeWalk != null) {
             renderPendingMarkerIfNeeded();
-            pendingCameraTarget = new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
+            if (lastLocation != null) {
+                pendingCameraTarget = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+            } else {
+                pendingCameraTarget = new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude());
+            }
             pendingCameraZoom = 15f;
         } else if (lastLocation != null) {
             pendingCameraTarget = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+        } else {
+            timeoutHandler.postDelayed(locationTimeoutRunnable, 8000);
         }
 
         if (pendingCameraTarget != null) {
@@ -91,29 +94,23 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             view.showForcedWalkMarker(new LatLng(activeWalk.getWalkLatitude(), activeWalk.getWalkLongitude()));
         }
     }
-
-    // Location Updates
-    // ---------------------------------------------------------
     @Override
     public void onLocationReceived(Location loc) {
         if (loc == null) return;
 
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
         lastLocation = loc;
         Log.d("CircularWalksPresenter", "Location received: " + loc.getLatitude() + ", " + loc.getLongitude());
 
         if (!initialZoom && mapReady) {
-            view.moveCamera(new LatLng(loc.getLatitude(), loc.getLongitude()), 12f);
+            float zoom = isForcedWalk ? 15f : 12f;
+            view.moveCamera(new LatLng(loc.getLatitude(), loc.getLongitude()), zoom);
             initialZoom = true;
         } else if (!initialZoom) {
             pendingCameraTarget = new LatLng(loc.getLatitude(), loc.getLongitude());
+            if (isForcedWalk) pendingCameraZoom = 15f;
         }
-
-        // Start forced walk if pending
-        // ---------------------------------------------------------
         if (pendingForcedWalkDest != null) beginForcedWalk(pendingForcedWalkDest);
-
-        // Fetch walks once
-        // ---------------------------------------------------------
         if (activeWalk == null && !walksFetched) {
             walksFetched = true;
             Log.d("CircularWalksPresenter", "Fetching walks for location...");
@@ -124,9 +121,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             });
         }
     }
-
-    // Walk Selection
-    // ---------------------------------------------------------
     @Override
     public void onWalkSelected(walkModel walk) {
         view.moveCamera(new LatLng(walk.getWalkLatitude(), walk.getWalkLongitude()), 15f);
@@ -156,9 +150,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         view.showHint();
     }
-
-    // Main Route Loop
-    // ---------------------------------------------------------
     private final Runnable routeLoop = new Runnable() {
         @Override
         public void run() {
@@ -170,8 +161,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             preTrimRoute();
             updateLiveRoute(lastLocation);
             checkProximity(lastLocation);
-
-            previousLocation = new Location(lastLocation);
             scheduleNext();
         }
     };
@@ -190,9 +179,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     private void scheduleNext() {
         routeHandler.postDelayed(routeLoop, 1500);
     }
-
-    // Routing Logic
-    // ---------------------------------------------------------
     private void updateLiveRoute(Location userLocation) {
         if (fullRoutePoints.isEmpty()) return;
 
@@ -282,9 +268,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         android.location.Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, r);
         return r[0];
     }
-
-    // Proximity
-    // ---------------------------------------------------------
     private void checkProximity(Location loc) {
         if (activeWalk == null) return;
 
@@ -322,9 +305,6 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
             }
         }
     }
-
-    // Walk Completion
-    // ---------------------------------------------------------
     public void completeRegularWalk() { finishWalk("Walk completed!"); }
     public void completeForcedWalk() { finishWalk("Forced walk completed!"); }
 
@@ -347,21 +327,36 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         activeWalk = null;
 
+        int currentXp = repository.getXP();
+        int currentMonthlyXp = repository.getMonthlyXP();
+        int currentCoins = repository.getCoins();
+        int currentLevel = repository.getLevel();
+        int currentLifetimeXp = repository.getLifetimeXP();
+        int currentLifetimeCoins = repository.getLifetimeCoins();
+        int currentLifetimeCircular = repository.getLifetimeCircular();
+
+        int newXp = currentXp + earnedXp;
+        int newMonthlyXp = currentMonthlyXp + earnedXp;
+        int newLifetimeXp = currentLifetimeXp + earnedXp;
+        int newCoins = currentCoins + 75;
+        int newLifetimeCoins = currentLifetimeCoins + 75;
+        int newLifetimeCircular = currentLifetimeCircular + 1;
+        int newLevel = currentLevel;
+
+        while (newXp >= newLevel * 100) {
+            newXp -= newLevel * 100;
+            newLevel++;
+        }
+
+        repository.saveStats(repository.getHunger(), repository.getClean(), 100);
+        repository.saveXPandLevel(newXp, newLevel, newLifetimeXp, newMonthlyXp, repository.getLastMonth());
+        repository.saveCoins(newCoins, newLifetimeCoins);
+        repository.saveLifetimeCircular(newLifetimeCircular);
+        repository.saveTime(System.currentTimeMillis() / 1000);
+
+        updateFirestoreStats(newLifetimeXp, newMonthlyXp, newLevel);
+
         Context ctx = view.getContext();
-        var p = ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
-        int currentXp = p.getInt("xp", 0);
-        int currentCoins = p.getInt("coins", 0);
-
-        p.edit()
-                .putInt("walked", 100)
-                .putLong("last_save_time", System.currentTimeMillis() / 1000)
-                .putInt("coins", currentCoins + 75)
-                .putInt("lifetime_coins", p.getInt("lifetime_coins", 0) + 75)
-                .putInt("xp", currentXp + earnedXp)
-                .putInt("lifetime_xp", p.getInt("lifetime_xp", 0) + earnedXp)
-                .putInt("lifetime_circular", p.getInt("lifetime_circular", 0) + 1)
-                .apply();
-
         Intent i = new Intent(ctx, Tamagotchi.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         ctx.startActivity(i);
@@ -369,16 +364,20 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         view.toggleWalkList(true);
     }
 
-    // Forced Walk
-    // ---------------------------------------------------------
-    public void startForcedWalk(LatLng dest) {
-        isForcedWalk = true;
-        pendingForcedWalkDest = dest;
+    private void updateFirestoreStats(int lifetimeXP, int monthlyXP, int level) {
+        String username = repository.getUsername().toLowerCase();
+        if (!username.isEmpty()) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("lifetimeXP", lifetimeXP);
+            updates.put("monthlyXP", monthlyXP);
+            updates.put("level", level);
+            updates.put("city", repository.getCity());
 
-        if (lastLocation != null) {
-            renderPendingMarkerIfNeeded();
-            beginForcedWalk(dest);
-        } else view.showMessage("Waiting for GPS...");
+            db.collection("Users").document(username)
+                    .update(updates)
+                    .addOnFailureListener(e -> Log.e("CircularWalksPresenter", "Error updating Firestore stats", e));
+        }
     }
 
     private void beginForcedWalk(LatLng dest) {
@@ -387,6 +386,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         isReturning = false;
 
         view.toggleWalkList(false);
+        view.showHint();
 
         model.fetchRoute(startPoint, dest, pts -> {
             fullRoutePoints.clear();
@@ -396,13 +396,33 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
         });
 
         pendingForcedWalkDest = null;
+        renderPendingMarkerIfNeeded();
     }
 
-    // Lifecycle
-    // ---------------------------------------------------------
+    @Override
+    public void setForcedWalk(double lat, double lon) {
+        this.isForcedWalk = true;
+        this.pendingForcedWalkDest = new LatLng(lat, lon);
+        if (lastLocation != null) {
+            beginForcedWalk(pendingForcedWalkDest);
+        }
+    }
+
     @Override
     public void onResume() { startRouteLoop(); }
 
     @Override
-    public void onPause() { stopRouteLoop(); }
+    public void onPause() {
+        stopRouteLoop();
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+    }
+
+    @Override
+    public void onDestroy() {
+        stopRouteLoop();
+        timeoutHandler.removeCallbacks(locationTimeoutRunnable);
+        if (model != null) {
+            model.shutdown();
+        }
+    }
 }

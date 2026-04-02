@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -15,9 +18,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Walkies">
+        
+        <receiver android:name=".tamagotchi.HungryReceiver" android:exported="false" />
+
         <activity
             android:name=".mysteryWalks.MysteryWalks"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="locked" />
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -27,10 +34,12 @@
             android:value="AIzaSyDUbpPscuM7nxEfltJvEPh7AhtSOJMCi7w" />
         <activity
             android:name=".circularWalks.CircularWalksMap"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="locked" />
         <activity
             android:name=".tamagotchi.Tamagotchi"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="locked">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

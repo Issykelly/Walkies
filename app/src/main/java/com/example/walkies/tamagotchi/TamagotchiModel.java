@@ -103,13 +103,6 @@ public class TamagotchiModel implements TamagotchiContract.Model {
     }
 
     @Override
-    public void gainXP(int value){
-        xp += value;
-        lifetimeXP += value;
-        monthlyXP += value;
-    }
-
-    @Override
     public void levelUP(int Extraxp){
         level++;
         gainCoins(100);
@@ -161,14 +154,12 @@ public class TamagotchiModel implements TamagotchiContract.Model {
         this.city = city;
     }
 
-    // decay
-    // ------------------------------------------------------------------------)
 
     @Override
     public void decay(long seconds){
-        hunger -= (int) (seconds / 180);
-        clean  -= (int) (seconds / 240);
-        walked -= (int) (seconds / 240);
+        hunger -= (int) (seconds / 360);
+        clean  -= (int) (seconds / 480);
+        walked -= (int) (seconds / 480);
 
         hunger = Math.max(0, hunger);
         clean  = Math.max(0, clean);

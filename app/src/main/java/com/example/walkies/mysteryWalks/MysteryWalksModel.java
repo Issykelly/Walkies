@@ -1,17 +1,28 @@
 package com.example.walkies.mysteryWalks;
 
 import com.example.walkies.walkModel;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
+
+import android.content.Context;
 import android.util.Log;
-import android.location.Location;
+
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.location.Priority;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Source;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MysteryWalksModel implements MysteryWalksContract.Model {
 
     private static final String TAG = "MysteryWalksModel";
 
-    private final android.content.Context ctx;
     private final com.google.firebase.firestore.FirebaseFirestore db;
     private final com.google.android.gms.location.FusedLocationProviderClient client;
+    private final TamagotchiRepository repository;
 
     private com.google.android.gms.location.LocationCallback trackingCallback;
 
@@ -19,9 +30,9 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
     private int initialDistance = 0;
 
     public MysteryWalksModel(android.content.Context ctx) {
-        this.ctx = ctx;
 
         db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
+        repository = new TamagotchiRepository(ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
 
         client = com.google.android.gms.location.LocationServices
                 .getFusedLocationProviderClient(ctx);
@@ -40,57 +51,50 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
 
     @Override
     public void loadWalks(Callback<java.util.List<walkModel>> cb) {
-
-        db.collection("MysteryWalks").get()
+        String userCity = repository.getCity();
+        DocumentReference cityRef = db.collection("Cities").document(userCity);
+        
+        db.collection("MysteryWalks")
+                .whereEqualTo("city", cityRef)
+                .get(Source.DEFAULT) 
                 .addOnSuccessListener(q -> {
 
                     java.util.List<walkModel> list = new java.util.ArrayList<>();
+                    boolean isFromCache = q.getMetadata().isFromCache();
 
-                    if (q != null) {
+                    for (var d : q) {
+                        try {
+                            var geo = d.getGeoPoint("Location");
+                            if (geo == null) geo = d.getGeoPoint("location");
+                            if (geo == null) continue;
 
-                        for (var d : q) {
-
-                            try {
-
-                                var geo = d.getGeoPoint("Location");
-
-                                if (geo == null)
-                                    geo = d.getGeoPoint("location");
-
-                                if (geo == null)
-                                    continue;
-
-                                String name = d.getString("name");
-
-                                if (name == null) {
-                                    Object walkNo = d.get("WalkNo");
-                                    name = walkNo != null
-                                            ? String.valueOf(walkNo)
-                                            : d.getId();
-                                }
-
-                                list.add(new walkModel(
-                                        name,
-                                        0,
-                                        geo.getLongitude(),
-                                        geo.getLatitude(),
-                                        new String[]{
-                                                d.getString("HintOne") != null ? d.getString("HintOne") : d.getString("Hint1"),
-                                                d.getString("HintTwo") != null ? d.getString("HintTwo") : d.getString("Hint2"),
-                                                d.getString("HintThree") != null ? d.getString("HintThree") : d.getString("Hint3")
-                                        }));
-
-                            } catch (Exception e) {
-                                Log.e(TAG, "Parse error " + d.getId(), e);
+                            String name = d.getString("name");
+                            if (name == null) {
+                                Object walkNo = d.get("WalkNo");
+                                name = walkNo != null ? String.valueOf(walkNo) : d.getId();
                             }
+
+                            list.add(new walkModel(
+                                    name,
+                                    0,
+                                    geo.getLongitude(),
+                                    geo.getLatitude(),
+                                    new String[]{
+                                            d.getString("HintOne") != null ? d.getString("HintOne") : d.getString("Hint1"),
+                                            d.getString("HintTwo") != null ? d.getString("HintTwo") : d.getString("Hint2"),
+                                            d.getString("HintThree") != null ? d.getString("HintThree") : d.getString("Hint3")
+                                    }));
+
+                        } catch (Exception e) {
+                            Log.e(TAG, "Parse error " + d.getId(), e);
                         }
                     }
 
-                    cb.call(list);
+                    cb.call(list, isFromCache);
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Load walks error", e);
-                    cb.call(new java.util.ArrayList<>());
+                    cb.call(new java.util.ArrayList<>(), false);
                 });
     }
 
@@ -107,9 +111,9 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
 
             @Override
             public void onLocationResult(
-                    com.google.android.gms.location.LocationResult r) {
+                    @NonNull com.google.android.gms.location.LocationResult r) {
 
-                if (r != null && r.getLastLocation() != null)
+                if (r.getLastLocation() != null)
                     cb.call(r.getLastLocation());
             }
         };
@@ -177,35 +181,41 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
         switch (maxHint) {
             case 1: hintMultiplier = 1.0; break;
             case 2: hintMultiplier = 0.75; break;
-            case 3: hintMultiplier = 0.50; break;
             default: hintMultiplier = 0.50;
         }
 
         int earnedXp = (int) Math.round(baseXp * hintMultiplier);
 
-        var p = ctx.getSharedPreferences(
-                "WalkiesPrefs",
-                android.content.Context.MODE_PRIVATE);
+        repository.addWalkRewards(earnedXp, 75, false);
 
-        int currentXp = p.getInt("xp", 0);
-        int currentCoins = p.getInt("coins", 0);
-
-        p.edit()
-                .putInt("walked", 100)
-                .putLong("last_save_time", System.currentTimeMillis() / 1000)
-                .putInt("coins", currentCoins + 75)
-                .putInt("lifetime_coins", p.getInt("lifetime_coins", 0) + 75)
-                .putInt("xp", currentXp + earnedXp)
-                .putInt("lifetime_xp", p.getInt("lifetime_xp", 0) + earnedXp)
-                .putInt("lifetime_mystery", p.getInt("lifetime_mystery", 0) + 1)
-                .apply();
+        updateFirestoreStats();
     }
 
+    private void updateFirestoreStats() {
+        String username = repository.getUsername().toLowerCase();
+        if (!username.isEmpty()) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("lifetimeXP", repository.getLifetimeXP());
+            updates.put("monthlyXP", repository.getMonthlyXP());
+            updates.put("level", repository.getLevel());
+            updates.put("city", repository.getCity());
 
+            db.collection("Users").document(username)
+                    .update(updates)
+                    .addOnFailureListener(e -> Log.e(TAG, "Error updating Firestore stats", e));
+        }
+    }
 
+    @Override
     public void reset() {
         initialDistance = 0;
         maxHint = 0;
+    }
+
+    @Override
+    public void shutdown() {
+        stopTracking();
     }
 
 }

@@ -1,44 +1,54 @@
 [versions]
-agp = "8.13.2"
-androidxJunit = "1.1.1"
-espressoCoreVersion = "3.2.0"
-googleFirebaseBom = "34.8.0"
+agp = "8.7.3"
+androidxJunit = "1.2.1"
+googleFirebaseBom = "34.11.0"
 junit = "4.13.2"
-junitJunit = "4.12"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
-appcompat = "1.6.1"
-material = "1.10.0"
-activity = "1.8.0"
-constraintlayout = "2.1.4"
+espressoCore = "3.6.1"
+appcompat = "1.7.0"
+material = "1.12.0"
+activity = "1.9.3"
+constraintlayout = "2.2.0"
 playServicesLocation = "21.3.0"
-playServicesMaps = "19.0.0"
-recyclerview = "1.4.0"
+playServicesMaps = "20.0.0"
+recyclerview = "1.3.2"
 googleMapsServices = "2.2.0"
 greenCoffee = "3.6.0"
 cucumberAndroid = "7.18.1"
+mockito = "5.14.2"
+testCore = "1.6.1"
+testRunner = "1.6.1"
 
 [libraries]
-
-cucumber-android = { group = "io.cucumber", name = "cucumber-android", version.ref = "cucumberAndroid" }
-com-google-firebase-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
-espresso-core-v320 = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+# UI and Core
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-junit-v111 = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
-junit-v412 = { module = "junit:junit", version.ref = "junitJunit" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+
+# Firebase
+com-google-firebase-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+
+# Google Play Services
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 google-maps-services = { module = "com.google.maps:google-maps-services", version.ref = "googleMapsServices" }
-green-coffee = { group = "com.github.mauriciotogneri", name = "green-coffee", version.ref = "greenCoffee" }
+
+# Unit Testing
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+
+# Instrumented Testing
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+test-core = { group = "androidx.test", name = "core", version.ref = "testCore" }
+test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
+mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockito" }
+green-coffee = { group = "com.github.mauriciotogrelli", name = "green-coffee", version.ref = "greenCoffee" }
+cucumber-android = { group = "io.cucumber", name = "cucumber-android", version.ref = "cucumberAndroid" }
+cucumber-picocontainer = { group = "io.cucumber", name = "cucumber-picocontainer", version.ref = "cucumberAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

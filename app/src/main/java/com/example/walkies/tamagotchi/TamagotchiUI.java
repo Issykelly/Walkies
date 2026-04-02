@@ -1,16 +1,19 @@
 package com.example.walkies.tamagotchi;
 
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,6 +54,13 @@ public class TamagotchiUI {
 
     public TamagotchiUI(FragmentActivity activity) {
         this.activity = activity;
+    }
+
+    private static int getDialogWidth(android.content.res.Resources res) {
+        TypedValue outValue = new TypedValue();
+        res.getValue(R.dimen.dialog_width_percent, outValue, true);
+        float percent = outValue.getFloat();
+        return (int) (res.getDisplayMetrics().widthPixels * percent);
     }
 
     public void showWalkOptions() {
@@ -125,6 +135,19 @@ public class TamagotchiUI {
         dialog.show(fm, "OnboardingGoalDialog");
     }
 
+    public void showNoInternetDialog(Runnable onRetry) {
+        FragmentManager fm = activity.getSupportFragmentManager();
+        NoInternetDialogFragment dialog = NoInternetDialogFragment.newInstance(onRetry);
+        dialog.show(fm, "NoInternetDialog");
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return true;
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(cm.getActiveNetwork());
+        return capabilities == null || (!capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) && !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+    }
+
     public static class WalkDialogFragment extends DialogFragment {
         @NonNull
         @Override
@@ -196,9 +219,9 @@ public class TamagotchiUI {
 
             TextView levelText = view.findViewById(R.id.levelText);
 
-            String title = "You leveled up!\n";
-            String subtitle = "you've reached level " + level + "\n";
-            String reward = "+100 coins";
+            String title = getString(R.string.level_up_title);
+            String subtitle = getString(R.string.level_up_reached, level);
+            String reward = getString(R.string.level_up_reward);
 
             SpannableStringBuilder sb = new SpannableStringBuilder();
             sb.append(title);
@@ -224,8 +247,7 @@ public class TamagotchiUI {
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 RenderEffect blur = RenderEffect.createBlurEffect(15f, 15f, Shader.TileMode.CLAMP);
@@ -275,8 +297,8 @@ public class TamagotchiUI {
 
             TextView levelText = view.findViewById(R.id.levelText);
 
-            String title = "you're currently level " + level + "!\n";
-            String subtitle = "you've got " + xp + "/" + totalxp + " xp\n";
+            String title = getString(R.string.current_level_title, level);
+            String subtitle = getString(R.string.current_level_xp, xp, totalxp);
 
             SpannableStringBuilder sb = new SpannableStringBuilder();
             sb.append(title);
@@ -301,8 +323,7 @@ public class TamagotchiUI {
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 RenderEffect blur = RenderEffect.createBlurEffect(15f, 15f, Shader.TileMode.CLAMP);
@@ -370,8 +391,7 @@ public class TamagotchiUI {
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 RenderEffect blur = RenderEffect.createBlurEffect(15f, 15f, Shader.TileMode.CLAMP);
@@ -416,37 +436,21 @@ public class TamagotchiUI {
                     .inflate(R.layout.dialog_settings_details, null);
 
             Bundle args = getArguments();
+            assert args != null;
             String username = args.getString(ARG_USERNAME);
             String currentCity = args.getString(ARG_CITY);
             boolean isMuted = args.getBoolean(ARG_MUTED);
 
             ((TextView) view.findViewById(R.id.tvUsernameValue)).setText(username);
-            
+
             SwitchCompat switchMute = view.findViewById(R.id.switchMute);
             switchMute.setChecked(isMuted);
 
             Spinner spinner = view.findViewById(R.id.spinnerChangeCity);
             List<String> cityList = new ArrayList<>();
-            cityList.add("Loading cities...");
+            cityList.add(getString(R.string.loading_cities));
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, cityList) {
-                @NonNull
-                @Override
-                public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                    View v = super.getView(position, convertView, parent);
-                    ((TextView) v).setTextColor(Color.BLACK);
-                    return v;
-                }
-
-                @Override
-                public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                    View v = super.getDropDownView(position, convertView, parent);
-                    ((TextView) v).setTextColor(Color.BLACK);
-                    v.setBackgroundColor(Color.WHITE);
-                    return v;
-                }
-            };
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayAdapter<String> adapter = getStringArrayAdapter(cityList);
             spinner.setAdapter(adapter);
 
             FirebaseFirestore.getInstance().collection("Cities").get().addOnSuccessListener(queryDocumentSnapshots -> {
@@ -479,12 +483,41 @@ public class TamagotchiUI {
             return builder.create();
         }
 
+        @NonNull
+        private ArrayAdapter<String> getStringArrayAdapter(List<String> cityList) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, cityList) {
+                @NonNull
+                @Override
+                public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                    View v = super.getView(position, convertView, parent);
+                    TypedValue typedValue = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+                    ((TextView) v).setTextColor(typedValue.data);
+                    return v;
+                }
+
+                @Override
+                public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                    View v = super.getDropDownView(position, convertView, parent);
+                    TypedValue textColor = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, textColor, true);
+                    ((TextView) v).setTextColor(textColor.data);
+
+                    TypedValue bgColor = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(com.google.android.material.R.attr.colorSurface, bgColor, true);
+                    v.setBackgroundColor(bgColor.data);
+                    return v;
+                }
+            };
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            return adapter;
+        }
+
         @Override
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
         }
     }
@@ -524,12 +557,13 @@ public class TamagotchiUI {
                     .inflate(R.layout.dialog_lifetime_stats, null);
 
             Bundle args = getArguments();
-            ((TextView) view.findViewById(R.id.lifetimeXP)).setText("Lifetime XP: " + args.getInt(ARG_XP));
-            ((TextView) view.findViewById(R.id.lifetimeCoins)).setText("Lifetime Coins: " + args.getInt(ARG_COINS));
-            ((TextView) view.findViewById(R.id.lifetimeCircular)).setText("Circular Walks: " + args.getInt(ARG_CIRCULAR));
-            ((TextView) view.findViewById(R.id.lifetimeMystery)).setText("Mystery Walks: " + args.getInt(ARG_MYSTERY));
-            ((TextView) view.findViewById(R.id.lifetimeFed)).setText("Times Fed: " + args.getInt(ARG_FED));
-            ((TextView) view.findViewById(R.id.lifetimeBathed)).setText("Times Bathed: " + args.getInt(ARG_BATHED));
+            assert args != null;
+            ((TextView) view.findViewById(R.id.lifetimeXP)).setText(getString(R.string.lifetime_xp, args.getInt(ARG_XP)));
+            ((TextView) view.findViewById(R.id.lifetimeCoins)).setText(getString(R.string.lifetime_coins, args.getInt(ARG_COINS)));
+            ((TextView) view.findViewById(R.id.lifetimeCircular)).setText(getString(R.string.circular_walks_stat, args.getInt(ARG_CIRCULAR)));
+            ((TextView) view.findViewById(R.id.lifetimeMystery)).setText(getString(R.string.mystery_walks_stat, args.getInt(ARG_MYSTERY)));
+            ((TextView) view.findViewById(R.id.lifetimeFed)).setText(getString(R.string.times_fed, args.getInt(ARG_FED)));
+            ((TextView) view.findViewById(R.id.lifetimeBathed)).setText(getString(R.string.times_bathed, args.getInt(ARG_BATHED)));
 
             view.findViewById(R.id.btnBackStats).setOnClickListener(v -> dismiss());
 
@@ -544,8 +578,7 @@ public class TamagotchiUI {
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 RenderEffect blur = RenderEffect.createBlurEffect(15f, 15f, Shader.TileMode.CLAMP);
@@ -585,7 +618,7 @@ public class TamagotchiUI {
             rv = view.findViewById(R.id.rvLeaderboard);
             pb = view.findViewById(R.id.pbLeaderboard);
             RadioGroup rgTime = view.findViewById(R.id.rgLeaderboardTime);
-            
+
             rv.setLayoutManager(new LinearLayoutManager(requireContext()));
             entries = new ArrayList<>();
             adapter = new LeaderboardAdapter(entries);
@@ -595,8 +628,8 @@ public class TamagotchiUI {
                 Tamagotchi activity = (Tamagotchi) getActivity();
                 goal = activity.getRepository().getGoal();
                 city = activity.getRepository().getCity();
-                
-                fetchLeaderboard(true); // Default to lifetime
+
+                fetchLeaderboard(true);
             }
 
             rgTime.setOnCheckedChangeListener((group, checkedId) -> {
@@ -615,10 +648,10 @@ public class TamagotchiUI {
         private void fetchLeaderboard(boolean isLifetime) {
             pb.setVisibility(View.VISIBLE);
             rv.setVisibility(View.GONE);
-            
+
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             String sortField = isLifetime ? "lifetimeXP" : "monthlyXP";
-            
+
             Query query;
             if ("friends".equals(goal)) {
                 query = db.collection("Users")
@@ -638,10 +671,10 @@ public class TamagotchiUI {
                     String username = doc.getString("username");
                     Long xp = doc.getLong(sortField);
                     Long level = doc.getLong("level");
-                    
+
                     entries.add(new LeaderboardEntry(
-                        rank++, 
-                        username != null ? username : "Unknown", 
+                        rank++,
+                        username != null ? username : getString(R.string.unknown),
                         level != null ? level.intValue() : 1,
                         xp != null ? xp.intValue() : 0
                     ));
@@ -652,7 +685,7 @@ public class TamagotchiUI {
             }).addOnFailureListener(e -> {
                 Log.e("Leaderboard", "Error fetching leaderboard", e);
                 pb.setVisibility(View.GONE);
-                Toast.makeText(requireContext(), "Error loading leaderboard. Index may be building.", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), getString(R.string.error_loading_leaderboard), Toast.LENGTH_LONG).show();
             });
         }
 
@@ -660,8 +693,7 @@ public class TamagotchiUI {
         public void onStart() {
             super.onStart();
             if (getDialog() != null && getDialog().getWindow() != null) {
-                int width = (int) (getResources().getDisplayMetrics().widthPixels * 0.85);
-                getDialog().getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
             }
         }
     }
@@ -699,8 +731,8 @@ public class TamagotchiUI {
             LeaderboardEntry entry = entries.get(position);
             holder.tvRank.setText(String.valueOf(entry.rank));
             holder.tvUsername.setText(entry.username);
-            holder.tvLevel.setText("Lvl " + entry.level);
-            holder.tvXP.setText(entry.xp + " XP");
+            holder.tvLevel.setText(holder.itemView.getContext().getString(R.string.leaderboard_lvl_format, entry.level));
+            holder.tvXP.setText(holder.itemView.getContext().getString(R.string.leaderboard_xp_format, entry.xp));
         }
 
         @Override
@@ -721,6 +753,7 @@ public class TamagotchiUI {
     }
 
     public static class CantAffordDialogFragment extends DialogFragment {
+        @NonNull
         @Override
         public android.app.Dialog onCreateDialog(Bundle savedInstanceState) {
             androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireActivity());
@@ -731,8 +764,10 @@ public class TamagotchiUI {
     }
 
     public static class WelcomeDialogFragment extends DialogFragment {
+        @NonNull
         @Override
         public android.app.Dialog onCreateDialog(Bundle savedInstanceState) {
+            setCancelable(false);
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireActivity(), R.style.OnboardingDialogTheme));
             View view = requireActivity().getLayoutInflater().inflate(R.layout.dialog_welcome, null);
 
@@ -746,79 +781,106 @@ public class TamagotchiUI {
             builder.setView(view);
             return builder.create();
         }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            if (getDialog() != null && getDialog().getWindow() != null) {
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+        }
     }
 
     public static class OnboardingProfileDialogFragment extends DialogFragment {
+        @NonNull
         @Override
         public android.app.Dialog onCreateDialog(Bundle savedInstanceState) {
+            setCancelable(false);
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireActivity(), R.style.OnboardingDialogTheme));
             View view = requireActivity().getLayoutInflater().inflate(R.layout.dialog_onboarding_profile, null);
 
             Spinner spinner = view.findViewById(R.id.spinnerCity);
             List<String> cityList = new ArrayList<>();
-            cityList.add("Loading cities...");
+            cityList.add(getString(R.string.loading_cities));
 
             ArrayAdapter<String> adapter = getStringArrayAdapter(cityList);
             spinner.setAdapter(adapter);
 
-            // Fetch cities from Firestore
-            FirebaseFirestore.getInstance().collection("Cities").get().addOnSuccessListener(queryDocumentSnapshots -> {
-                cityList.clear();
-                for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                    cityList.add(document.getId());
-                }
-                if (cityList.isEmpty()) {
-                    cityList.add("No cities found");
-                }
-                adapter.notifyDataSetChanged();
-            }).addOnFailureListener(e -> {
-                cityList.clear();
-                cityList.add("Error loading cities");
-                adapter.notifyDataSetChanged();
-            });
+            if (isNetworkAvailable(requireContext())) {
+                view.post(() -> {
+                    if (getActivity() instanceof Tamagotchi) {
+                        ((Tamagotchi) getActivity()).getTamagotchiUI().showNoInternetDialog(() -> {
+                            dismiss();
+                            ((Tamagotchi) getActivity()).getTamagotchiUI().showOnboardingProfileDialog();
+                        });
+                    }
+                });
+            } else {
+                FirebaseFirestore.getInstance().collection("Cities").get().addOnSuccessListener(queryDocumentSnapshots -> {
+                    cityList.clear();
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        cityList.add(document.getId());
+                    }
+                    if (cityList.isEmpty()) {
+                        cityList.add(getString(R.string.no_cities_found));
+                    }
+                    adapter.notifyDataSetChanged();
+                }).addOnFailureListener(e -> {
+                    cityList.clear();
+                    cityList.add(getString(R.string.error_loading_cities));
+                    adapter.notifyDataSetChanged();
+                });
+            }
 
             view.findViewById(R.id.btnProfileContinue).setOnClickListener(v -> {
+                if (isNetworkAvailable(requireContext())) {
+                    if (getActivity() instanceof Tamagotchi) {
+                        ((Tamagotchi) getActivity()).getTamagotchiUI().showNoInternetDialog(() -> {
+                            dismiss();
+                            ((Tamagotchi) getActivity()).getTamagotchiUI().showOnboardingProfileDialog();
+                        });
+                    }
+                    return;
+                }
+
                 EditText etUsername = view.findViewById(R.id.etUsername);
                 String username = etUsername.getText().toString().trim().toLowerCase();
                 String city = spinner.getSelectedItem().toString();
 
                 if (username.isEmpty()) {
-                    Toast.makeText(requireContext(), "Please enter a username", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.please_enter_username), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 if (getActivity() instanceof Tamagotchi) {
                     Tamagotchi activity = (Tamagotchi) getActivity();
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    
+
                     db.collection("Users").document(username).get().addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             DocumentSnapshot document = task.getResult();
                             if (document.exists()) {
-                                // Username already exists
-                                Toast.makeText(requireContext(), "Username already taken", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(requireContext(), getString(R.string.username_taken), Toast.LENGTH_SHORT).show();
                             } else {
-                                // Create new user
                                 Map<String, Object> user = new HashMap<>();
                                 user.put("city", city);
                                 user.put("username", username);
                                 user.put("lifetimeXP", 0);
                                 user.put("monthlyXP", 0);
                                 user.put("level", 1);
-                                
+
                                 db.collection("Users").document(username).set(user).addOnSuccessListener(aVoid -> {
-                                    // Save to shared prefs
                                     activity.getRepository().saveUsername(username);
                                     activity.getRepository().saveCity(city);
-                                    
+
                                     activity.getTamagotchiUI().showOnboardingGoalDialog();
                                     dismiss();
                                 }).addOnFailureListener(e -> {
-                                    Toast.makeText(requireContext(), "Error creating user", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(requireContext(), getString(R.string.error_creating_user), Toast.LENGTH_SHORT).show();
                                 });
                             }
                         } else {
-                            Toast.makeText(requireContext(), "Database error", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), getString(R.string.database_error), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -830,25 +892,40 @@ public class TamagotchiUI {
 
         @NonNull
         private ArrayAdapter<String> getStringArrayAdapter(List<String> cityList) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, cityList) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, cityList) {
                 @NonNull
                 @Override
                 public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                     View v = super.getView(position, convertView, parent);
-                    ((TextView) v).setTextColor(Color.BLACK);
+                    TypedValue typedValue = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+                    ((TextView) v).setTextColor(typedValue.data);
                     return v;
                 }
 
                 @Override
                 public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                     View v = super.getDropDownView(position, convertView, parent);
-                    ((TextView) v).setTextColor(Color.BLACK);
-                    v.setBackgroundColor(Color.WHITE);
+                    TypedValue textColor = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, textColor, true);
+                    ((TextView) v).setTextColor(textColor.data);
+
+                    TypedValue bgColor = new TypedValue();
+                    requireContext().getTheme().resolveAttribute(com.google.android.material.R.attr.colorSurface, bgColor, true);
+                    v.setBackgroundColor(bgColor.data);
                     return v;
                 }
             };
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             return adapter;
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            if (getDialog() != null && getDialog().getWindow() != null) {
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
         }
     }
 
@@ -856,6 +933,7 @@ public class TamagotchiUI {
         @NonNull
         @Override
         public android.app.Dialog onCreateDialog(Bundle savedInstanceState) {
+            setCancelable(false);
             AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireActivity(), R.style.OnboardingDialogTheme));
             View view = requireActivity().getLayoutInflater().inflate(R.layout.dialog_onboarding_goal, null);
 
@@ -867,19 +945,59 @@ public class TamagotchiUI {
                     if (checkedId == R.id.rbFriends) {
                         goalValue = "friends";
                     }
-                    
+
                     if (getActivity() instanceof Tamagotchi) {
                         Tamagotchi activity = (Tamagotchi) getActivity();
                         activity.getRepository().saveGoal(goalValue);
                     }
                     dismiss();
                 } else {
-                    Toast.makeText(requireContext(), "Please select a goal", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.please_select_goal), Toast.LENGTH_SHORT).show();
                 }
             });
 
             builder.setView(view);
             return builder.create();
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            if (getDialog() != null && getDialog().getWindow() != null) {
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
+        }
+    }
+
+    public static class NoInternetDialogFragment extends DialogFragment {
+        private Runnable onRetry;
+
+        public static NoInternetDialogFragment newInstance(Runnable onRetry) {
+            NoInternetDialogFragment fragment = new NoInternetDialogFragment();
+            fragment.onRetry = onRetry;
+            return fragment;
+        }
+
+        @NonNull
+        @Override
+        public android.app.Dialog onCreateDialog(Bundle savedInstanceState) {
+            setCancelable(false);
+            AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(requireActivity(), R.style.OnboardingDialogTheme));
+            builder.setTitle(R.string.no_internet_title)
+                    .setMessage(R.string.no_internet_message)
+                    .setPositiveButton(R.string.retry, (dialog, id) -> {
+                        if (onRetry != null) onRetry.run();
+                        dismiss();
+                    });
+            return builder.create();
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+            if (getDialog() != null && getDialog().getWindow() != null) {
+                getDialog().getWindow().setLayout(getDialogWidth(getResources()), ViewGroup.LayoutParams.WRAP_CONTENT);
+            }
         }
     }
 }

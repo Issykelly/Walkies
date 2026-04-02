@@ -5,8 +5,10 @@ import android.location.Location;
 import android.util.Log;
 
 import com.example.walkies.R;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -17,7 +19,6 @@ import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.TravelMode;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -25,19 +26,26 @@ public class CircularWalksModel implements CircularWalksContract.Model {
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
     private final GeoApiContext geoApiContext;
+    private final TamagotchiRepository repository;
 
     public CircularWalksModel(Context ctx) {
         geoApiContext = new GeoApiContext.Builder()
                 .apiKey(ctx.getString(R.string.google_maps_key))
                 .build();
+        repository = new TamagotchiRepository(ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
     }
 
     @Override
     public void fetchWalks(double lat, double lon, WalksCallback cb) {
-        db.collection("CircularWalks").get()
+        String userCity = repository.getCity();
+        DocumentReference cityRef = db.collection("Cities").document(userCity);
+
+        db.collection("CircularWalks")
+                .whereEqualTo("city", cityRef)
+                .get()
                 .addOnSuccessListener(res -> {
                     List<walkModel> list = new ArrayList<>();
-                    Log.d("CircularWalksModel", "Fetched " + res.size() + " documents from Firestore");
+                    Log.d("CircularWalksModel", "Fetched " + res.size() + " documents from Firestore for city: " + userCity);
 
                     for (QueryDocumentSnapshot doc : res) {
                         String name = doc.getString("name");
@@ -91,13 +99,9 @@ public class CircularWalksModel implements CircularWalksContract.Model {
 
     @Override
     public void fetchRoute(LatLng origin, LatLng dest, RouteCallback cb) {
-            // Snap both points to nearest road
-            // ---------------------------------------------------------
             LatLng snappedOrigin = snapToRoad(origin);
             LatLng snappedDest = snapToRoad(dest);
 
-            // Try walking first
-            // ---------------------------------------------------------
             fetchRouteWithMode(snappedOrigin, snappedDest, TravelMode.WALKING, points -> {
 
                 if (points.isEmpty()) {
@@ -158,5 +162,12 @@ public class CircularWalksModel implements CircularWalksContract.Model {
                         });
                     }
                 });
+    }
+
+    @Override
+    public void shutdown() {
+        if (geoApiContext != null) {
+            geoApiContext.shutdown();
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.walkies.tamagotchi;
 
 import android.content.Context;
-import java.util.List;
 import java.util.Set;
 
 public interface TamagotchiContract {
@@ -22,12 +21,13 @@ public interface TamagotchiContract {
 
         void hideMenus();
 
-        void showLevelUpPopup(int newLevel);
-
         void tailWagAnimation();
 
         void playEatingSound();
         void playBubblesSound();
+
+        void scheduleHungryNotification(int hunger);
+        void cancelHungryNotification();
 
         Context getContext();
     }
@@ -35,7 +35,6 @@ public interface TamagotchiContract {
 
     interface Presenter {
         void attach();
-        void detach();
 
         void onFeed(int value);
         void onClean(int value);
@@ -77,8 +76,6 @@ public interface TamagotchiContract {
         void xp(int value);
 
         void level(int value);
-
-        void gainXP(int value);
 
         void levelUP(int xp);
 
