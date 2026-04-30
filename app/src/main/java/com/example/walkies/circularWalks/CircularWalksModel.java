@@ -32,7 +32,7 @@ public class CircularWalksModel implements CircularWalksContract.Model {
         geoApiContext = new GeoApiContext.Builder()
                 .apiKey(ctx.getString(R.string.google_maps_key))
                 .build();
-        repository = new TamagotchiRepository(ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
+        repository = new TamagotchiRepository(ctx);
     }
 
     @Override
@@ -99,6 +99,7 @@ public class CircularWalksModel implements CircularWalksContract.Model {
 
     @Override
     public void fetchRoute(LatLng origin, LatLng dest, RouteCallback cb) {
+        new Thread(() -> {
             LatLng snappedOrigin = snapToRoad(origin);
             LatLng snappedDest = snapToRoad(dest);
 
@@ -122,6 +123,7 @@ public class CircularWalksModel implements CircularWalksContract.Model {
                 }
 
             });
+        }).start();
     }
 
 
@@ -167,7 +169,13 @@ public class CircularWalksModel implements CircularWalksContract.Model {
     @Override
     public void shutdown() {
         if (geoApiContext != null) {
-            geoApiContext.shutdown();
+            new Thread(() -> {
+                try {
+                    geoApiContext.shutdown();
+                } catch (Exception e) {
+                    Log.e("CircularWalksModel", "Error shutting down GeoApiContext", e);
+                }
+            }).start();
         }
     }
 }

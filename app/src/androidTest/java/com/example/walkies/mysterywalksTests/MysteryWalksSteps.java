@@ -3,7 +3,6 @@ package com.example.walkies.mysterywalksTests;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
@@ -18,6 +17,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.walkies.mysteryWalks.MysteryWalksContract;
 import com.example.walkies.mysteryWalks.MysteryWalksPresenter;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.example.walkies.walkModel;
 import com.mauriciotogneri.greencoffee.GreenCoffeeSteps;
 import com.mauriciotogneri.greencoffee.annotations.Given;
@@ -43,7 +43,12 @@ public class MysteryWalksSteps extends GreenCoffeeSteps {
         mockModel = mock(MysteryWalksContract.Model.class);
 
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE).edit().clear().apply();
+
+        TamagotchiRepository repository = new TamagotchiRepository(context);
+        repository.clear();
+        repository.saveUsername("testuser");
+        repository.saveCity("London");
+        repository.saveGoal("alone");
 
         presenter = new MysteryWalksPresenter(mockView, mockModel);
     }
@@ -61,7 +66,7 @@ public class MysteryWalksSteps extends GreenCoffeeSteps {
 
         doAnswer(invocation -> {
             MysteryWalksContract.Model.Callback<List<walkModel>> callback = invocation.getArgument(0);
-            callback.call(availableWalks);
+            callback.call(availableWalks, false);
             return null;
         }).when(mockModel).loadWalks(any());
 
@@ -182,7 +187,6 @@ public class MysteryWalksSteps extends GreenCoffeeSteps {
         setupMocks();
         testWalk = new walkModel(name, 1.0, -0.1280, 51.5080, new String[]{"Hint 1", "Hint 2", "Hint 3"});
         
-        // Stub getLastLocation (uses LocationCallback)
         doAnswer(invocation -> {
             MysteryWalksContract.Model.LocationCallback callback = invocation.getArgument(0);
             Location mockLoc = new Location("mock");
@@ -234,13 +238,12 @@ public class MysteryWalksSteps extends GreenCoffeeSteps {
 
     @When("^the screen is initialized$")
     public void screenInitialized() {
-        // mocking the model to return a sample walk list for initialization
         List<walkModel> mockList = new ArrayList<>();
         mockList.add(new walkModel("Test", 0, 0, 0, null));
         
         doAnswer(invocation -> {
             MysteryWalksContract.Model.Callback<List<walkModel>> cb = invocation.getArgument(0);
-            cb.call(mockList);
+            cb.call(mockList, false);
             return null;
         }).when(mockModel).loadWalks(any());
 

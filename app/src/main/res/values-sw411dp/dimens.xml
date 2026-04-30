@@ -7,13 +7,12 @@
     <dimen name="dog_translation_y">20dp</dimen>
     <dimen name="accessory_width">326dp</dimen>
     <dimen name="accessory_height">751dp</dimen>
-    <dimen name="accessory_translation_y">-180dp</dimen>
-    <dimen name="accessory_translation_x">-12dp</dimen>
+    <dimen name="accessory_translation_y">-165dp</dimen>
+    <dimen name="accessory_translation_x">-27dp</dimen>
     
     <dimen name="suds_width">300dp</dimen>
     <dimen name="suds_height">400dp</dimen>
 
-    <!-- Text Sizes restored to original large values -->
     <dimen name="huge_text_size">48sp</dimen>
     <dimen name="large_hint_text_size">34sp</dimen>
     <dimen name="header_text_size">24sp</dimen>
@@ -22,13 +21,10 @@
     <dimen name="body_text_size">18sp</dimen>
     <dimen name="menu_text_size">14sp</dimen>
 
-    <!-- Component Sizes restored to original hardcoded values -->
     <dimen name="burger_menu_size">86dp</dimen>
     <dimen name="top_button_size">60dp</dimen>
     <dimen name="stat_icon_size">60dp</dimen>
     <dimen name="back_button_size">65dp</dimen>
     <dimen name="action_button_size">68dp</dimen>
-    
-    <!-- Margins -->
     <dimen name="menu_margin">10dp</dimen>
 </resources>

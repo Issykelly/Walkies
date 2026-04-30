@@ -1,6 +1,9 @@
 package com.example.walkies.progressionTests;
 
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -9,7 +12,6 @@ import com.mauriciotogneri.greencoffee.GreenCoffeeConfig;
 import com.mauriciotogneri.greencoffee.GreenCoffeeTest;
 import com.mauriciotogneri.greencoffee.ScenarioConfig;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -19,8 +21,6 @@ import java.io.IOException;
 @RunWith(Parameterized.class)
 @LargeTest
 public class ProgressionTest extends GreenCoffeeTest {
-    @Rule
-    public ActivityScenarioRule<Tamagotchi> activityRule = new ActivityScenarioRule<>(Tamagotchi.class);
 
     public ProgressionTest(ScenarioConfig scenarioConfig) {
         super(scenarioConfig);
@@ -40,6 +40,19 @@ public class ProgressionTest extends GreenCoffeeTest {
 
     @Test
     public void test() {
-        start(new ProgressionSteps());
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SharedPreferences prefs = context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
+        prefs.edit()
+                .putString("username", "testuser")
+                .putString("city", "London")
+                .putBoolean("first_launch", false)
+                .putInt("coins", 500)
+                .putInt("xp", 0)
+                .putInt("level", 1)
+                .apply();
+
+        try (ActivityScenario<Tamagotchi> scenario = ActivityScenario.launch(Tamagotchi.class)) {
+            start(new ProgressionSteps());
+        }
     }
 }

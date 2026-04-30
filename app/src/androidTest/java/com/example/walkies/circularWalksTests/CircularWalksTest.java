@@ -1,8 +1,11 @@
 package com.example.walkies.circularWalksTests;
 
+import android.Manifest;
+
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
 
 import com.example.walkies.circularWalks.CircularWalksMap;
 import com.mauriciotogneri.greencoffee.GreenCoffeeConfig;
@@ -19,6 +22,12 @@ import java.io.IOException;
 @RunWith(Parameterized.class)
 @LargeTest
 public class CircularWalksTest extends GreenCoffeeTest {
+
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.ACCESS_FINE_LOCATION
+    );
 
     @Rule
     public ActivityScenarioRule<CircularWalksMap> activityRule = new ActivityScenarioRule<>(CircularWalksMap.class);

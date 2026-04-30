@@ -1,11 +1,16 @@
 package com.example.walkies.tamagotchi;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKeys;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.Set;
 
 public class TamagotchiRepository {
-    private final SharedPreferences prefs;
+    private SharedPreferences prefs;
     public static final String KEY_COINS = "coins";
     public static final String KEY_LIFETIME_COINS = "lifetime_coins";
     public static final String KEY_XP = "xp";
@@ -29,8 +34,24 @@ public class TamagotchiRepository {
     public static final String KEY_GOAL = "goal";
     public static final String KEY_MUTED = "muted";
 
-    public TamagotchiRepository(SharedPreferences prefs) {
-        this.prefs = prefs;
+    public TamagotchiRepository(Context context) {
+        try {
+            String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+            this.prefs = EncryptedSharedPreferences.create(
+                    "WalkiesSecurePrefs",
+                    masterKeyAlias,
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+            this.prefs = context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
+        }
+    }
+
+    public void clear() {
+        prefs.edit().clear().commit();
     }
 
     public void saveStats(int hunger, int clean, int walked) {
@@ -38,7 +59,7 @@ public class TamagotchiRepository {
                 .putInt(KEY_HUNGER, hunger)
                 .putInt(KEY_CLEAN, clean)
                 .putInt(KEY_WALKED, walked)
-                .apply();
+                .commit();
     }
 
     public void saveXPandLevel(int xp, int level, int lifetimeXP, int monthlyXP, String lastMonth) {
@@ -48,14 +69,14 @@ public class TamagotchiRepository {
                 .putInt(KEY_LIFETIME_XP, lifetimeXP)
                 .putInt(KEY_MONTHLY_XP, monthlyXP)
                 .putString(KEY_LAST_MONTH, lastMonth)
-                .apply();
+                .commit();
     }
 
     public void saveCoins(int coins, int lifetimeCoins) {
         prefs.edit()
                 .putInt(KEY_COINS, coins)
                 .putInt(KEY_LIFETIME_COINS, lifetimeCoins)
-                .apply();
+                .commit();
     }
 
     public void addWalkRewards(int earnedXp, int earnedCoins, boolean isCircular) {
@@ -96,13 +117,13 @@ public class TamagotchiRepository {
             editor.putInt(KEY_LIFETIME_MYSTERY, getLifetimeMystery() + 1);
         }
         
-        editor.apply();
+        editor.commit();
     }
 
     public void saveCity(String city) {
         prefs.edit()
                 .putString(KEY_CITY, city)
-                .apply();
+                .commit();
     }
 
     public String getCity() {
@@ -112,7 +133,7 @@ public class TamagotchiRepository {
     public void saveUsername(String username) {
         prefs.edit()
                 .putString(KEY_USERNAME, username)
-                .apply();
+                .commit();
     }
 
     public String getUsername() {
@@ -122,7 +143,7 @@ public class TamagotchiRepository {
     public void saveGoal(String goal) {
         prefs.edit()
                 .putString(KEY_GOAL, goal)
-                .apply();
+                .commit();
     }
 
     public String getGoal() {
@@ -160,13 +181,13 @@ public class TamagotchiRepository {
     public void saveLifetimeCircular(int circular) {
         prefs.edit()
                 .putInt(KEY_LIFETIME_CIRCULAR, circular)
-                .apply();
+                .commit();
     }
 
     public void saveLifetimeMystery(int mystery) {
         prefs.edit()
                 .putInt(KEY_LIFETIME_MYSTERY, mystery)
-                .apply();
+                .commit();
     }
 
     public int getLifetimeCircular() {
@@ -180,13 +201,13 @@ public class TamagotchiRepository {
     public void saveLifetimeFed(int fed) {
         prefs.edit()
                 .putInt(KEY_LIFETIME_FED, fed)
-                .apply();
+                .commit();
     }
 
     public void saveLifetimeBathed(int bathed) {
         prefs.edit()
                 .putInt(KEY_LIFETIME_BATHED, bathed)
-                .apply();
+                .commit();
     }
 
     public int getLifetimeFed() {
@@ -210,18 +231,17 @@ public class TamagotchiRepository {
     }
 
     public void saveTime(long timestamp) {
-        prefs.edit().putLong(KEY_LAST_SAVE_TIME, timestamp).apply();
+        prefs.edit().putLong(KEY_LAST_SAVE_TIME, timestamp).commit();
     }
 
     public long getLastSavedTime() {
-        long currentTime = System.currentTimeMillis() / 1000;
-        return prefs.getLong(KEY_LAST_SAVE_TIME, currentTime);
+        return prefs.getLong(KEY_LAST_SAVE_TIME, System.currentTimeMillis() / 1000);
     }
 
     public boolean IsFirstLaunch(){
         boolean isFirstLaunch = prefs.getBoolean(KEY_FIRST_LAUNCH, true);
         if (isFirstLaunch) {
-            prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply();
+            prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).commit();
             return true;
         } else {
             return false;
@@ -229,7 +249,7 @@ public class TamagotchiRepository {
     }
 
     public void saveOwnedHats(Set<String> ownedHats) {
-        prefs.edit().putStringSet(KEY_OWNED_HATS, ownedHats).apply();
+        prefs.edit().putStringSet(KEY_OWNED_HATS, ownedHats).commit();
     }
 
     public Set<String> getOwnedHats() {
@@ -237,7 +257,7 @@ public class TamagotchiRepository {
     }
 
     public void saveSelectedHat(int hatId) {
-        prefs.edit().putInt(KEY_SELECTED_HAT, hatId).apply();
+        prefs.edit().putInt(KEY_SELECTED_HAT, hatId).commit();
     }
 
     public int getSelectedHat() {
@@ -245,7 +265,7 @@ public class TamagotchiRepository {
     }
 
     public void saveMuted(boolean muted) {
-        prefs.edit().putBoolean(KEY_MUTED, muted).apply();
+        prefs.edit().putBoolean(KEY_MUTED, muted).commit();
     }
 
     public boolean isMuted() {

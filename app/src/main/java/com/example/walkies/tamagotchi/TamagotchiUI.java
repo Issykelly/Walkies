@@ -43,9 +43,12 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class TamagotchiUI {
@@ -664,6 +667,8 @@ public class TamagotchiUI {
                         .limit(10);
             }
 
+            String currentMonth = new SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(new Date());
+
             query.get().addOnSuccessListener(queryDocumentSnapshots -> {
                 entries.clear();
                 int rank = 1;
@@ -671,6 +676,11 @@ public class TamagotchiUI {
                     String username = doc.getString("username");
                     Long xp = doc.getLong(sortField);
                     Long level = doc.getLong("level");
+                    String userLastMonth = doc.getString("lastMonth");
+
+                    if (!isLifetime && userLastMonth != null && !userLastMonth.equals(currentMonth)) {
+                        xp = 0L;
+                    }
 
                     entries.add(new LeaderboardEntry(
                         rank++,
@@ -699,10 +709,10 @@ public class TamagotchiUI {
     }
 
     private static class LeaderboardEntry {
-        int rank;
-        String username;
-        int level;
-        int xp;
+        final int rank;
+        final String username;
+        final int level;
+        final int xp;
 
         LeaderboardEntry(int rank, String username, int level, int xp) {
             this.rank = rank;
@@ -741,7 +751,10 @@ public class TamagotchiUI {
         }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvRank, tvUsername, tvLevel, tvXP;
+            final TextView tvRank;
+            final TextView tvUsername;
+            final TextView tvLevel;
+            final TextView tvXP;
             ViewHolder(View view) {
                 super(view);
                 tvRank = view.findViewById(R.id.tvRank);

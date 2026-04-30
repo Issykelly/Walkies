@@ -12,64 +12,64 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/lifetime_stats_title"
-        android:textSize="24sp"
+        android:textSize="@dimen/header_text_size"
         android:textStyle="bold"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <TextView
         android:id="@+id/lifetimeXP"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/lifetime_xp"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lifetimeCoins"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/lifetime_coins"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lifetimeCircular"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/circular_walks_stat"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lifetimeMystery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/mystery_walks_stat"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lifetimeFed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/times_fed"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="4dp"/>
 
     <TextView
         android:id="@+id/lifetimeBathed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/times_bathed"
-        android:textSize="18sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <Button
         android:id="@+id/btnBackStats"

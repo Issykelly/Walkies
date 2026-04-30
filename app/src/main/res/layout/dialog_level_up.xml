@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="280dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/levelup_background"
     android:padding="24dp">
@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/level_up"
-        android:textSize="24sp"
+        android:textSize="@dimen/header_text_size"
         android:textStyle="bold"
         android:textAlignment="center"
         android:textColor="@android:color/black"/>

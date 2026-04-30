@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
@@ -28,7 +29,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.example.walkies.R;
 
@@ -38,8 +38,8 @@ import java.util.Map;
 public class Tamagotchi extends AppCompatActivity
         implements TamagotchiContract.View {
 
-    private static final String PREFS_NAME = "WalkiesPrefs";
     private static final String CHANNEL_ID = "hungry_dog_channel";
+    private static final String TAG = "TamagotchiActivity";
 
     private TamagotchiPresenter presenter;
     private TamagotchiModel model;
@@ -74,6 +74,11 @@ public class Tamagotchi extends AppCompatActivity
 
     private TextView foodHint;
     private TextView bathHint;
+
+    private TextView brownCost;
+    private TextView pinkCost;
+    private TextView greenCost;
+    private TextView pinkPartyCost;
 
     private boolean brought = false;
 
@@ -135,8 +140,14 @@ public class Tamagotchi extends AppCompatActivity
         foodHint = findViewById(R.id.foodHint);
         bathHint = findViewById(R.id.bathHint);
 
+        brownCost = findViewById(R.id.brownCost);
+        pinkCost = findViewById(R.id.pinkCost);
+        greenCost = findViewById(R.id.greenCost);
+        pinkPartyCost = findViewById(R.id.pinkPartyCost);
+
         model = new TamagotchiModel(100, 100, 100, 0, 0, 0, 0, 0, getString(R.string.walk_name), 0, 0, 0,0,0, "city");
-        repository = new TamagotchiRepository(getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
+        repository = new TamagotchiRepository(this);
+        //repository.clear();
         ui = new TamagotchiUI(this);
         presenter = new TamagotchiPresenter(this, model, ui, repository, this);
 
@@ -249,11 +260,13 @@ public class Tamagotchi extends AppCompatActivity
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Hungry Dog Channel";
             String description = "Notifications for when your dog is hungry";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 
@@ -369,6 +382,7 @@ public class Tamagotchi extends AppCompatActivity
 
     @Override
     public void showHatMenu() {
+        updateHatPricesVisibility();
         burgerMenu.animate().translationX(burgerMenu.getWidth() + 100).setDuration(300)
                 .withEndAction(() -> burgerMenu.setVisibility(View.GONE));
         mainMenu.setVisibility(View.GONE);
@@ -572,6 +586,13 @@ public class Tamagotchi extends AppCompatActivity
         bathHint.setVisibility(View.GONE);
     }
 
+    private void updateHatPricesVisibility() {
+        brownCost.setVisibility(model.isHatOwned("browncowboyhat") ? View.GONE : View.VISIBLE);
+        pinkCost.setVisibility(model.isHatOwned("pinkcowboyhat") ? View.GONE : View.VISIBLE);
+        greenCost.setVisibility(model.isHatOwned("partyhatgreen") ? View.GONE : View.VISIBLE);
+        pinkPartyCost.setVisibility(model.isHatOwned("partyhatpink") ? View.GONE : View.VISIBLE);
+    }
+
     private void buyHat(int hatID) {
         if (hatID == 0) {
             model.setSelectedHat(0);
@@ -596,6 +617,7 @@ public class Tamagotchi extends AppCompatActivity
                 model.addOwnedHat(hatName);
                 model.setSelectedHat(hatID);
                 brought = true;
+                updateHatPricesVisibility();
                 hideMenus();
                 updateUI();
                 presenter.saveStats();
@@ -666,10 +688,10 @@ public class Tamagotchi extends AppCompatActivity
 
     @Override
     public void scheduleHungryNotification(int hunger) {
-        if (hunger <= 0) return;
-
-        long timeUntilEmptySeconds = (long) hunger * 360;
+        long timeUntilEmptySeconds = (hunger <= 0) ? 10 : (long) hunger * 360;
         long triggerAtMillis = System.currentTimeMillis() + (timeUntilEmptySeconds * 1000);
+
+        Log.d(TAG, "Scheduling notification for " + timeUntilEmptySeconds + " seconds from now");
 
         Intent intent = new Intent(this, HungryReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 
@@ -678,9 +700,9 @@ public class Tamagotchi extends AppCompatActivity
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if (alarmManager != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
             } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
             }
         }
     }

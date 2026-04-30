@@ -3,7 +3,6 @@ package com.example.walkies.mysteryWalks;
 import com.example.walkies.walkModel;
 import com.example.walkies.tamagotchi.TamagotchiRepository;
 
-import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -32,7 +31,7 @@ public class MysteryWalksModel implements MysteryWalksContract.Model {
     public MysteryWalksModel(android.content.Context ctx) {
 
         db = com.google.firebase.firestore.FirebaseFirestore.getInstance();
-        repository = new TamagotchiRepository(ctx.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
+        repository = new TamagotchiRepository(ctx);
 
         client = com.google.android.gms.location.LocationServices
                 .getFusedLocationProviderClient(ctx);

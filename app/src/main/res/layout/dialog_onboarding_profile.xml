@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/setup_profile"
-        android:textSize="20sp"
+        android:textSize="@dimen/header_text_size"
         android:textStyle="bold"
         android:textColor="?android:attr/textColorPrimary"
         android:layout_marginBottom="16dp"/>
@@ -27,6 +27,7 @@
             android:layout_height="wrap_content"
             android:background="?attr/colorSurface"
             android:textColor="?android:attr/textColorPrimary"
+            android:textSize="@dimen/body_text_size"
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -34,7 +35,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/select_city"
-        android:textSize="14sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorSecondary"
         android:layout_marginBottom="8dp"/>
 

@@ -132,6 +132,7 @@ public class TamagotchiPresenter implements TamagotchiContract.Presenter {
             Map<String, Object> updates = new HashMap<>();
             updates.put("lifetimeXP", model.getLifetimeXP());
             updates.put("monthlyXP", model.getMonthlyXP());
+            updates.put("lastMonth", model.getLastMonth());
             updates.put("level", model.getLevel());
             updates.put("city", model.getCity());
             

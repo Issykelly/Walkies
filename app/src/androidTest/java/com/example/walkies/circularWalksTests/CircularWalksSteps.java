@@ -4,13 +4,13 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.location.Location;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.example.walkies.circularWalks.CircularWalksContract;
 import com.example.walkies.circularWalks.CircularWalksPresenter;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
 import com.mauriciotogneri.greencoffee.GreenCoffeeSteps;
@@ -44,9 +44,9 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
         mockModel = mock(CircularWalksContract.Model.class);
         
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-        // Clean slate for each test
-        context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE).edit().clear().apply();
+        TamagotchiRepository repository = new TamagotchiRepository(context);
+        repository.clear();
+        repository.saveStats(100, 100, 0);
         
         when(mockView.getContext()).thenReturn(context);
 
@@ -154,9 +154,8 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
     @Then("the walk is marked as completed in shared preferences")
     public void verifyWalkCompletion() {
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        SharedPreferences prefs = context.getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE);
-
-        assertEquals(100, prefs.getInt("walked", -1));
+        TamagotchiRepository repository = new TamagotchiRepository(context);
+        assertEquals(100, repository.getWalked());
         
         verify(mockView, atLeastOnce()).toggleWalkList(true);
     }
@@ -177,7 +176,6 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
     @When("the map becomes ready")
     public void mapReady() {
         setupMocks();
-        // If location was provided, ensure presenter has it before mapReady logic
         if (userLocation != null) {
             presenter.onLocationReceived(userLocation);
         }
@@ -190,12 +188,9 @@ public class CircularWalksSteps extends GreenCoffeeSteps {
                 .moveCamera(any(LatLng.class), anyFloat());
     }
 
-    // helpers
-    // -------------------------------------------------------------------------------
-
     private void waitForLoop() {
         try {
-            Thread.sleep(2000); // wait for the 1.5s Handler loop to fire
+            Thread.sleep(2000); 
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

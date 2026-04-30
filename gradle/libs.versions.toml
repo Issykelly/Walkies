@@ -17,6 +17,7 @@ cucumberAndroid = "7.18.1"
 mockito = "5.14.2"
 testCore = "1.6.1"
 testRunner = "1.6.1"
+testRules = "1.6.1"
 
 [libraries]
 # UI and Core
@@ -45,8 +46,9 @@ ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androi
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 test-core = { group = "androidx.test", name = "core", version.ref = "testCore" }
 test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
+test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
 mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockito" }
-green-coffee = { group = "com.github.mauriciotogrelli", name = "green-coffee", version.ref = "greenCoffee" }
+green-coffee = { group = "com.github.mauriciotogneri", name = "green-coffee", version.ref = "greenCoffee" }
 cucumber-android = { group = "io.cucumber", name = "cucumber-android", version.ref = "cucumberAndroid" }
 cucumber-picocontainer = { group = "io.cucumber", name = "cucumber-picocontainer", version.ref = "cucumberAndroid" }
 

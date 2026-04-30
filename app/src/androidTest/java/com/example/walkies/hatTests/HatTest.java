@@ -1,10 +1,15 @@
 package com.example.walkies.hatTests;
 
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
+import android.Manifest;
+import android.content.Context;
+
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.GrantPermissionRule;
 
 import com.example.walkies.tamagotchi.Tamagotchi;
+import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.mauriciotogneri.greencoffee.GreenCoffeeConfig;
 import com.mauriciotogneri.greencoffee.GreenCoffeeTest;
 import com.mauriciotogneri.greencoffee.ScenarioConfig;
@@ -19,8 +24,9 @@ import java.io.IOException;
 @RunWith(Parameterized.class)
 @LargeTest
 public class HatTest extends GreenCoffeeTest {
+
     @Rule
-    public ActivityScenarioRule<Tamagotchi> activityRule = new ActivityScenarioRule<>(Tamagotchi.class);
+    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(Manifest.permission.POST_NOTIFICATIONS);
 
     public HatTest(ScenarioConfig scenarioConfig) {
         super(scenarioConfig);
@@ -28,7 +34,6 @@ public class HatTest extends GreenCoffeeTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Iterable<ScenarioConfig> scenarios() throws IOException {
-
         return new GreenCoffeeConfig()
                 .withFeatureFromInputStream(
                         InstrumentationRegistry.getInstrumentation()
@@ -37,12 +42,21 @@ public class HatTest extends GreenCoffeeTest {
                                 .open("features/hat.feature")
                 )
                 .scenarios();
-
     }
-
 
     @Test
     public void test() {
-        start(new HatSteps());
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        TamagotchiRepository repository = new TamagotchiRepository(context);
+        
+        repository.saveUsername("testuser");
+        repository.saveCity("London");
+        repository.saveGoal("alone");
+        repository.saveCoins(500, 500);
+        repository.IsFirstLaunch();
+
+        try (ActivityScenario<Tamagotchi> scenario = ActivityScenario.launch(Tamagotchi.class)) {
+            start(new HatSteps());
+        }
     }
 }

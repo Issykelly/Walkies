@@ -21,7 +21,7 @@ import java.util.Map;
 public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
     private final CircularWalksContract.View view;
-    protected CircularWalksContract.Model model;
+    protected final CircularWalksContract.Model model;
     private final TamagotchiRepository repository;
     private walkModel activeWalk;
     private LatLng startPoint;
@@ -57,7 +57,7 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     public CircularWalksPresenter(CircularWalksContract.View v, CircularWalksContract.Model m) {
         this.view = v;
         this.model = m;
-        this.repository = new TamagotchiRepository(v.getContext().getSharedPreferences("WalkiesPrefs", Context.MODE_PRIVATE));
+        this.repository = new TamagotchiRepository(v.getContext());
         this.locationTimeoutRunnable = () -> {
             if (lastLocation == null) {
                 view.showLocationError();
@@ -320,41 +320,14 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
 
         int earnedXp = 0;
         if (activeWalk != null) {
-            double maxDistanceMeters = 1609.34;
-            double distanceRatio = Math.min(activeWalk.getWalkDistance() / maxDistanceMeters, 1.0);
+            double distanceRatio = Math.min(activeWalk.getWalkDistance(), 1.0);
             earnedXp = (int) Math.round(distanceRatio * 200);
         }
 
+        repository.addWalkRewards(earnedXp, 75, true);
+        updateFirestoreStats(repository.getLifetimeXP(), repository.getMonthlyXP(), repository.getLevel());
+
         activeWalk = null;
-
-        int currentXp = repository.getXP();
-        int currentMonthlyXp = repository.getMonthlyXP();
-        int currentCoins = repository.getCoins();
-        int currentLevel = repository.getLevel();
-        int currentLifetimeXp = repository.getLifetimeXP();
-        int currentLifetimeCoins = repository.getLifetimeCoins();
-        int currentLifetimeCircular = repository.getLifetimeCircular();
-
-        int newXp = currentXp + earnedXp;
-        int newMonthlyXp = currentMonthlyXp + earnedXp;
-        int newLifetimeXp = currentLifetimeXp + earnedXp;
-        int newCoins = currentCoins + 75;
-        int newLifetimeCoins = currentLifetimeCoins + 75;
-        int newLifetimeCircular = currentLifetimeCircular + 1;
-        int newLevel = currentLevel;
-
-        while (newXp >= newLevel * 100) {
-            newXp -= newLevel * 100;
-            newLevel++;
-        }
-
-        repository.saveStats(repository.getHunger(), repository.getClean(), 100);
-        repository.saveXPandLevel(newXp, newLevel, newLifetimeXp, newMonthlyXp, repository.getLastMonth());
-        repository.saveCoins(newCoins, newLifetimeCoins);
-        repository.saveLifetimeCircular(newLifetimeCircular);
-        repository.saveTime(System.currentTimeMillis() / 1000);
-
-        updateFirestoreStats(newLifetimeXp, newMonthlyXp, newLevel);
 
         Context ctx = view.getContext();
         Intent i = new Intent(ctx, Tamagotchi.class);
@@ -381,7 +354,17 @@ public class CircularWalksPresenter implements CircularWalksContract.Presenter {
     }
 
     private void beginForcedWalk(LatLng dest) {
-        activeWalk = new walkModel("Forced Walk", 0, dest.longitude, dest.latitude, null);
+        double distMiles = 0;
+        if (lastLocation != null) {
+            float[] r = new float[1];
+            android.location.Location.distanceBetween(
+                    lastLocation.getLatitude(), lastLocation.getLongitude(),
+                    dest.latitude, dest.longitude,
+                    r
+            );
+            distMiles = r[0] / 1609.34;
+        }
+        activeWalk = new walkModel("Forced Walk", distMiles, dest.longitude, dest.latitude, null);
         startPoint = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
         isReturning = false;
 

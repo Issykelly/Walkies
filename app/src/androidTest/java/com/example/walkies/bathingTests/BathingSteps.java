@@ -9,11 +9,13 @@ import com.mauriciotogneri.greencoffee.annotations.When;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.not;
 
+import androidx.test.espresso.NoMatchingViewException;
 import androidx.test.espresso.action.GeneralLocation;
 import androidx.test.espresso.action.GeneralSwipeAction;
 import androidx.test.espresso.action.Press;
@@ -23,7 +25,21 @@ import androidx.test.espresso.matcher.ViewMatchers;
 public class BathingSteps extends GreenCoffeeSteps {
     @Given("^I am on the Tamagotchi screen$")
     public void iAmOnTheTamagotchiScreen() {
+        handleOnboarding();
         onView(ViewMatchers.withId(R.id.main)).check(matches(isDisplayed()));
+    }
+
+    private void handleOnboarding() {
+        try {
+            onView(withId(R.id.btnWelcomeContinue)).check(matches(isDisplayed()));
+            onView(withId(R.id.btnWelcomeContinue)).perform(click());
+            onView(withId(R.id.etUsername)).perform(typeText("testuser"));
+            onView(withId(R.id.btnProfileContinue)).perform(click());
+            onView(withId(R.id.rbLeaveHouse)).perform(click());
+            onView(withId(R.id.btnGoalFinish)).perform(click());
+        } catch (NoMatchingViewException e) {
+
+        }
     }
 
     @When("^I tap the bath button$")
@@ -35,6 +51,16 @@ public class BathingSteps extends GreenCoffeeSteps {
     public void iShouldSeeTheWashMinigame() {
         onView(withId(R.id.mainMenu)).check(matches(not(isDisplayed())));
         onView(withId(R.id.draggingSponge)).check(matches(isDisplayed()));
+    }
+
+    @When("^I tap the back button$")
+    public void iTapTheBackButton() {
+        onView(withId(R.id.backButton)).perform(click());
+    }
+
+    @Then("^I should see the main menu$")
+    public void iShouldSeeTheMainMenu() {
+        onView(withId(R.id.mainMenu)).check(matches(isDisplayed()));
     }
 
     @When("^I wash the dog$")

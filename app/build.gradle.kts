@@ -38,10 +38,12 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.recyclerview)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
 
+    androidTestImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.green.coffee)
@@ -51,6 +53,7 @@ dependencies {
 
     androidTestImplementation(libs.test.core)
     androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.test.rules)
     implementation(platform(libs.com.google.firebase.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)

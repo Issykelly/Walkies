@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/choose_your_goal"
-        android:textSize="20sp"
+        android:textSize="@dimen/header_text_size"
         android:textStyle="bold"
         android:textColor="?android:attr/textColorPrimary"
         android:layout_marginBottom="8dp"/>
@@ -19,30 +19,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/goal_message"
-        android:textSize="14sp"
+        android:textSize="@dimen/body_text_size"
         android:textColor="?android:attr/textColorSecondary"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <RadioGroup
         android:id="@+id/rgGoal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="16dp">
 
         <RadioButton
             android:id="@+id/rbLeaveHouse"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
+            android:padding="8dp"
             android:text="@string/goal_leave_house"
+            android:textSize="@dimen/body_text_size"
             android:textColor="?android:attr/textColorPrimary" />
 
         <RadioButton
             android:id="@+id/rbFriends"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
+            android:padding="8dp"
             android:text="@string/goal_friends"
+            android:textSize="@dimen/body_text_size"
             android:textColor="?android:attr/textColorPrimary" />
     </RadioGroup>
 
