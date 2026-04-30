@@ -18,6 +18,7 @@ mockito = "5.14.2"
 testCore = "1.6.1"
 testRunner = "1.6.1"
 testRules = "1.6.1"
+secretsGradlePlugin = "2.0.1"
 
 [libraries]
 # UI and Core
@@ -54,3 +55,4 @@ cucumber-picocontainer = { group = "io.cucumber", name = "cucumber-picocontainer
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }

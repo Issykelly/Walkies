@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    alias(libs.plugins.secrets.gradle.plugin)
 }
 
 android {
@@ -30,6 +31,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildFeatures {
+        buildConfig = true
+    }
+}
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    ignoreList.add("keyToIgnore")
+    ignoreList.add("sdk.*")
 }
 
 dependencies {

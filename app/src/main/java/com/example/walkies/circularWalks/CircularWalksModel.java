@@ -4,7 +4,7 @@ import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
-import com.example.walkies.R;
+import com.example.walkies.BuildConfig;
 import com.example.walkies.tamagotchi.TamagotchiRepository;
 import com.example.walkies.walkModel;
 import com.google.android.gms.maps.model.LatLng;
@@ -30,7 +30,7 @@ public class CircularWalksModel implements CircularWalksContract.Model {
 
     public CircularWalksModel(Context ctx) {
         geoApiContext = new GeoApiContext.Builder()
-                .apiKey(ctx.getString(R.string.google_maps_key))
+                .apiKey(BuildConfig.MAPS_API_KEY)
                 .build();
         repository = new TamagotchiRepository(ctx);
     }

@@ -78,8 +78,9 @@ public class walksAdapter extends RecyclerView.Adapter<walksAdapter.ViewHolder> 
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView name, distance;
-        public ImageButton tick;
+        public final TextView name;
+        public final TextView distance;
+        public final ImageButton tick;
 
         public ViewHolder(View v) {
             super(v);

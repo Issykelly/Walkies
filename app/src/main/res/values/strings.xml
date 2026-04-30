@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Walkies</string>
-    <string name="google_maps_key">AIzaSyDUbpPscuM7nxEfltJvEPh7AhtSOJMCi7w</string>
     <string name="background_description">a basic background, with a floor and a door.</string>
     <string name="dog_description">the dog sprite, in the middle of the screen.</string>
     <string name="food_minigame_desc">floating food, to drag into the dogs mouth when feeding.</string>
